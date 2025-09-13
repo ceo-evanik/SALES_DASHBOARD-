@@ -1,3 +1,5 @@
+import LayoutWrapper from "@/components/layout-wrapper";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export default function DashboardLayout({
     children,
@@ -6,7 +8,11 @@ export default function DashboardLayout({
 }>) {
     return (
         <div>
-            {children}
+            <ThemeProvider>
+                <LayoutWrapper>
+                    {children}
+                </LayoutWrapper>
+            </ThemeProvider>
         </div>
     );
 }
