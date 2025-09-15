@@ -53,7 +53,7 @@ export default function LoginPage() {
           router.push("/dashboard");
         }, 1500);
       } else {
-        setMessage(data.message || "❌ Invalid email or password");
+        setMessage(data.message ||"❌ Invalid email or password");
         setMessageType("error");
       }
     } catch (error) {
