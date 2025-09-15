@@ -6,7 +6,7 @@ import { logger } from "../config/logger.js";
 // Generate JWT
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id, role: user.role, userType: user.userType },
+    { id: user._id, userType: user.userType },
     process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
@@ -15,7 +15,7 @@ const generateToken = (user) => {
 // Register User
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, contactNo, role, userType } = req.body;
+    const { name, email, password, contactNo, userType } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Name, email, and password are required" });
@@ -33,7 +33,6 @@ export const register = async (req, res, next) => {
       email,
       password: hashedPassword,
       contactNo,
-      role,
       userType,
     });
 
@@ -46,7 +45,6 @@ export const register = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
         userType: user.userType,
       },
     });
@@ -79,7 +77,6 @@ export const login = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
         userType: user.userType,
       },
     });
