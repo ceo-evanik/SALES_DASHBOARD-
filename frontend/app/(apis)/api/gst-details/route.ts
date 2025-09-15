@@ -16,15 +16,15 @@ export async function GET(req: Request) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "client-id": process.env.GST_API_CLIENT_ID!,
-                "client-secret": process.env.GST_API_SECRET!,
+                "client_id": process.env.GST_API_CLIENT_ID!,
+                "client_secret": process.env.GST_API_SECRET!,
             },
         })
 
         const data = await res.json()
-        console.log(data)
         return NextResponse.json({
-            customerName: data.customerName || "Unknown",
+            customerName: data.data.lgnm || "Unknown",
+            data : data.data,
         })
     } catch (error) {
         console.error(error)

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Card, CardContent } from "../ui/card"
@@ -8,31 +8,29 @@ import { Card, CardContent } from "../ui/card"
 export default function GstSearchAndDetailForm() {
     const [gstNumber, setGstNumber] = useState("")
     const [customerName, setCustomerName] = useState("")
-    const [details, setDetails] = useState<any>(null)
+    const [gstDetails, setGstDetails] = useState<any>(null)
+    const [geminiDetails, setGeminiDetails] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [mode, setMode] = useState<"idle" | "gstSearch" | "manualSearch">("idle")
 
-    // Step 1: Search via GST number -> fetch customerName -> auto Gemini
+    // Fetch GST taxpayer details
     async function handleSearchGST(e: React.FormEvent) {
         e.preventDefault()
         setLoading(true)
-        setCustomerName("")
-        setDetails(null)
+        setGstDetails(null)
+        setGeminiDetails(null)
         setMode("gstSearch")
 
         try {
-            const res = await fetch(`/api/gst-details?gstNumber=${encodeURIComponent(gstNumber)}`, {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            })
-
-
+            const res = await fetch(`/api/gst-details?gstNumber=${encodeURIComponent(gstNumber)}`)
             const data = await res.json()
-            const name = data.customerName || ""
-            setCustomerName(name)
-            console.log(data)
+            setGstDetails(data.data)
+            setCustomerName(data.customerName || "")
+
             // Auto-fetch Gemini after GST API success
-            // await handleFetchGemini(gstNumber, name)
+            if (data.customerName) {
+                await handleFetchGemini(gstNumber, data.customerName)
+            }
         } catch (err) {
             console.error(err)
         } finally {
@@ -40,11 +38,14 @@ export default function GstSearchAndDetailForm() {
         }
     }
 
-    // Step 2: Manual search by GST + Customer Name
+    useEffect(() => {
+        console.log(geminiDetails)
+    }, [geminiDetails])
+    // Manual Gemini search
     async function handleManualSearch(e: React.FormEvent) {
         e.preventDefault()
         setLoading(true)
-        setDetails(null)
+        setGeminiDetails(null)
         setMode("manualSearch")
 
         try {
@@ -56,78 +57,133 @@ export default function GstSearchAndDetailForm() {
         }
     }
 
-    // Common Gemini fetch function
+    // Common Gemini fetcher
     async function handleFetchGemini(gst: string, name: string) {
         try {
-            const res = await fetch("/api/gemini-gst", {
+            const res = await fetch("/api/gemini", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ gstNumber: gst, customerName: name }),
             })
 
             const data = await res.json()
-            setDetails(data)
+            setGeminiDetails(data)
         } catch (err) {
             console.error(err)
         }
     }
 
     return (
-        <div className="my-8 grid gap-8">
-            {/* --- Option A: Search by GST Number --- */}
-            <div>
-                <h2 className="text-lg font-semibold mb-2">Search by GST Number</h2>
-                <form
-                    onSubmit={handleSearchGST}
-                    className="flex gap-4 max-w-md mb-4"
-                >
+        <div className="my-8 space-y-8">
+            {/* --- GST Search Section --- */}
+            <Card className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Search Taxpayer Details</h2>
+                <p className="text-gray-600 mb-4">Enter a GSTIN to fetch public details from the API.</p>
+                <form onSubmit={handleSearchGST} className="flex gap-4 max-w-lg">
                     <Input
                         placeholder="Enter GST Number"
                         value={gstNumber}
                         onChange={(e) => setGstNumber(e.target.value)}
                     />
                     <Button type="submit" disabled={loading}>
-                        {loading && mode === "gstSearch" ? "Searching..." : "Search GST"}
+                        {loading && mode === "gstSearch" ? "Searching..." : "Search"}
                     </Button>
                 </form>
-            </div>
+            </Card>
 
-            {/* --- Option B: Manual Search (GST + Name) --- */}
-            <div>
-                <h2 className="text-lg font-semibold mb-2">Search by GST + Name</h2>
-                <form
-                    onSubmit={handleManualSearch}
-                    className="grid gap-4 max-w-md mb-4"
-                >
-                    <Input
-                        placeholder="GST Number"
-                        value={gstNumber}
-                        onChange={(e) => setGstNumber(e.target.value)}
-                    />
+            {/* --- Taxpayer Details --- */}
+            {gstDetails && (
+                <Card className="p-6 space-y-4">
+                    <h3 className="text-lg font-semibold">Taxpayer Details</h3>
+                    <div className="grid md:grid-cols-2 gap-2 text-sm">
+                        <p><strong>Legal Name:</strong> {gstDetails.lgnm}</p>
+                        <p><strong>Trade Name:</strong> {gstDetails.tradeNam}</p>
+                        <p><strong>GSTIN:</strong> {gstDetails.gstin}</p>
+                        <p><strong>Status:</strong> {gstDetails.sts}</p>
+                        <p><strong>Registration Date:</strong> {gstDetails.rgdt}</p>
+                        <p><strong>Last Updated:</strong> {gstDetails.lstupdt}</p>
+                        <p><strong>Taxpayer Type:</strong> {gstDetails.ctb}</p>
+                        <p><strong>e-Invoice Status:</strong> {gstDetails.einvoiceStatus}</p>
+                    </div>
+
+                    <div>
+                        <h4 className="font-semibold mt-4">Principal Place of Business</h4>
+                        <p>{gstDetails.pradr.addr.flno},{gstDetails.pradr.addr.bnm},{gstDetails.pradr.addr.bno},{gstDetails.pradr.addr.st},{gstDetails.pradr.addr.locality},{gstDetails.pradr.addr.loc},{gstDetails.pradr.addr.dst},{gstDetails.pradr.addr.pncd},{gstDetails.pradr.addr.stcd}</p>
+                    </div>
+
+                    {gstDetails.natureOfBusiness?.length > 0 && (
+                        <div>
+                            <h4 className="font-semibold mt-4">Nature of Business</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {gstDetails.natureOfBusiness.map((biz: string, idx: number) => (
+                                    <span key={idx} className="px-2 py-1 bg-gray-100 rounded text-sm">
+                                        {biz}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </Card>
+            )}
+
+            {/* --- Gemini-powered Search --- */}
+            <Card className="p-6 space-y-4">
+                <h2 className="text-xl font-semibold">Gemini-powered Customer Search</h2>
+                <p className="text-gray-600">
+                    Get more details about a customer using their name and GSTIN.
+                </p>
+
+                <form onSubmit={handleManualSearch} className="grid gap-4 max-w-lg">
                     <Input
                         placeholder="Customer Name"
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
                     />
-                    <Button type="submit" disabled={loading}>
-                        {loading && mode === "manualSearch"
-                            ? "Fetching details..."
-                            : "Get Details"}
+                    <Input
+                        placeholder="GST Number"
+                        value={gstNumber}
+                        onChange={(e) => setGstNumber(e.target.value)}
+                    />
+                    <Button type="submit" className="bg-purple-600 hover:bg-purple-700" disabled={loading}>
+                        {loading && mode === "manualSearch" ? "Fetching..." : "Get More Details"}
                     </Button>
                 </form>
-            </div>
 
-            {/* --- Show Gemini Details --- */}
-            {details && (
-                <Card className="p-4">
-                    <CardContent className="p-0">
-                        <p><strong>Customer Name:</strong> {details.customerName}</p>
-                        <p><strong>GST Number:</strong> {details.gstNumber}</p>
-                        <p><strong>Business Type:</strong> {details.businessType}</p>
-                        <p><strong>Address:</strong> {details.address}</p>
-                    </CardContent>
-                </Card>
-            )}
+                {/* --- Gemini Details --- */}
+                {geminiDetails && (
+                    <Card className="p-4 bg-gray-50">
+                        <CardContent className="space-y-2 text-sm">
+                            <p><strong>Lead Profile:</strong> {geminiDetails.customerName}</p>
+                            <h4 className="font-semibold">Company Overview</h4>
+                            <p><strong>Official Name:</strong> {geminiDetails.customerName}</p>
+                            <p><strong>Business Description:</strong> {geminiDetails.businessDescription}</p>
+                            <p><strong>Official Website URL:</strong> {geminiDetails.website || "Not available"}</p>
+                            <p><strong>Company Logo URL:</strong> {geminiDetails.logo || "Not available"}</p>
+
+                            <h4 className="font-semibold mt-2">Contact Information</h4>
+                            <p><strong>Email:</strong> {geminiDetails.email || "Not available"}</p>
+                            <p><strong>Phone:</strong> {geminiDetails.phone || "Not available"}</p>
+                            <p><strong>Registered Address:</strong> {geminiDetails.address}</p>
+
+                            {geminiDetails.directors && (
+                                <>
+                                    <h4 className="font-semibold mt-2">Key Personnel</h4>
+                                    <ul className="list-disc list-inside">
+                                        {geminiDetails.directors.map((d: string, i: number) => (
+                                            <li key={i}>{d}</li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
+
+                            <h4 className="font-semibold mt-2">Social Media Handles</h4>
+                            <p><strong>LinkedIn:</strong> {geminiDetails.linkedin || "Not available"}</p>
+                            <p><strong>Twitter:</strong> {geminiDetails.twitter || "Not available"}</p>
+                            <p><strong>Other:</strong> {geminiDetails.other || "Not available"}</p>
+                        </CardContent>
+                    </Card>
+                )}
+            </Card>
         </div>
     )
 }
