@@ -18,6 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/context/UserProvider';
 
 interface TopbarProps {
     isSideBarOpen: boolean;
@@ -26,14 +27,20 @@ interface TopbarProps {
 
 export function Topbar({ isSideBarOpen, setIsSideBarOpen }: TopbarProps) {
     const router = useRouter();
+    const { user, loading } = useUser(); // ✅ get logged-in user
 
     const handleLogout = () => {
-        localStorage.removeItem('token'); // Remove auth token
-        router.push('/signin'); // Redirect to Sign In page
+        localStorage.removeItem('token'); 
+        router.push('/signin');
     };
+
+    // 🔹 Fix: conditional fallback for first render
+    const firstName = !loading && user ? user.name.split(' ')[0] : '';
+    const avatarLetter = firstName ? firstName.charAt(0).toUpperCase() : '';
 
     return (
         <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] px-4">
+            
             {/* Mobile sidebar toggle */}
             <Button
                 variant="ghost"
@@ -59,6 +66,7 @@ export function Topbar({ isSideBarOpen, setIsSideBarOpen }: TopbarProps) {
 
             {/* Right actions */}
             <div className="flex items-center gap-3 ml-4">
+
                 {/* Notifications */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -84,14 +92,17 @@ export function Topbar({ isSideBarOpen, setIsSideBarOpen }: TopbarProps) {
                     <DropdownMenuTrigger asChild>
                         <button className="flex items-center gap-2 rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-800">
                             <Avatar className="h-8 w-8">
-                                <AvatarImage
-                                    src="https://ui-avatars.com/api/?name=User"
-                                    alt="User"
-                                />
-                                <AvatarFallback>U</AvatarFallback>
+                                {loading || !user ? (
+                                    <AvatarFallback>U</AvatarFallback>
+                                ) : (
+                                    <AvatarImage
+                                        src={`https://ui-avatars.com/api/?name=${firstName}`}
+                                        alt={firstName}
+                                    />
+                                )}
                             </Avatar>
                             <span className="hidden md:inline text-sm font-medium text-slate-900 dark:text-white">
-                                John Doe
+                                {!loading && user ? firstName : 'Loading...'}
                             </span>
                         </button>
                     </DropdownMenuTrigger>
@@ -105,13 +116,14 @@ export function Topbar({ isSideBarOpen, setIsSideBarOpen }: TopbarProps) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             className="flex items-center gap-2 cursor-pointer"
-                            onClick={handleLogout} // ✅ Logout
+                            onClick={handleLogout}
                         >
                             <LogOut className="h-4 w-4" />
                             Logout
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
+
             </div>
         </header>
     );

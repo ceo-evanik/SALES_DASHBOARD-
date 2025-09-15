@@ -42,7 +42,7 @@ const adminItems = [
     },
     { name: 'Calendar', href: '/calendar', icon: Calendar },
     { name: 'Documents', href: '/documents', icon: FileText },
-    { name: 'Profile', href: '/profile', icon: User },
+    { name: 'Profile', href: '/dashboard/profile', icon: User },
     { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
