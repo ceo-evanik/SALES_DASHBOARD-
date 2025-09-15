@@ -34,11 +34,16 @@ export const protect = async (req, res, next) => {
 };
 
 // Role-based access control
-export const authorize = (...roles) => {
+// Role-based access control using userType
+export const authorize = (...allowedTypes) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, message: "Forbidden: Access denied" });
+    if (!allowedTypes.includes(req.user.userType)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Access denied",
+      });
     }
     next();
   };
 };
+
