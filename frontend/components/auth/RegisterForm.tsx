@@ -61,7 +61,7 @@ export default function RegisterForm() {
       return;
     }
 
-    // ✅ Only backend expected fields
+    // ✅ Payload for backend
     const payload = {
       name: formData.name,
       email: formData.email,
@@ -82,11 +82,16 @@ export default function RegisterForm() {
       const data = await res.json();
 
       if (res.ok) {
+        // ✅ Save token in localStorage
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
+
         setMessage("✅ Registration successful!");
         setMessageType("success");
 
         setTimeout(() => {
-          router.push("/dashboard");
+          router.push("/dashboard"); // Redirect after success
         }, 1500);
       } else {
         setMessage(data.message || "❌ Registration failed");
