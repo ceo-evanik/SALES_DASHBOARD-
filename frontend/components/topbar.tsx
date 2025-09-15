@@ -1,11 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useTheme } from 'next-themes';
 import {
     Bell,
-    Sun,
-    Moon,
     Menu,
     Search,
     Settings,
@@ -21,8 +18,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from './theme-toggle';
 
-export function Topbar() {
-    const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+interface TopbarProps {
+    isSideBarOpen: boolean;
+    setIsSideBarOpen: (value: boolean) => void;
+}
+
+export function Topbar({ isSideBarOpen, setIsSideBarOpen }: TopbarProps) {
+    // const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
     return (
         <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] px-4">
@@ -31,7 +33,7 @@ export function Topbar() {
                 variant="ghost"
                 size="icon"
                 className="lg:hidden text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+                onClick={() => setIsSideBarOpen(!isSideBarOpen)}
             >
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle sidebar</span>

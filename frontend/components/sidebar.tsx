@@ -10,12 +10,15 @@ import {
     FileText,
     User,
     ChevronDown,
+    X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface SidebarProps {
-    role: 'admin' | 'user' | 'guest'
+    role: 'admin' | 'user' | 'guest';
+    isSideBarOpen: boolean;
+    setIsSideBarOpen: (value: boolean) => void;
 }
 
 const adminItems = [
@@ -23,7 +26,7 @@ const adminItems = [
         name: 'Dashboard',
         icon: LayoutDashboard,
         children: [
-            { name: 'Ecommerce', href: '/dashboard/ecommerce' },
+            { name: 'gst_search', href: '/dashboard/gst-search' },
             { name: 'Analytics', href: '/dashboard/analytics' },
             { name: 'Marketing', href: '/dashboard/marketing' },
         ],
@@ -43,7 +46,7 @@ const adminItems = [
     { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
-export function Sidebar({ role }: SidebarProps) {
+export function Sidebar({ role, isSideBarOpen, setIsSideBarOpen }: SidebarProps) {
     const pathname = usePathname()
     const menuItems = role === 'admin' ? adminItems : []
     const [openItems, setOpenItems] = useState<Record<string, boolean>>({})
@@ -53,11 +56,12 @@ export function Sidebar({ role }: SidebarProps) {
     }
 
     return (
-        <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0
-            bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white border-r border-slate-200 dark:border-slate-800">
+        <aside className={`${isSideBarOpen ? "absolute" : "hidden"} h-screen z-10  lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0
+            bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white border-r border-slate-200 dark:border-slate-800`}>
 
             {/* Brand */}
-            <div className="flex items-center h-16 px-6 font-bold text-lg border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between h-16 px-6 font-bold text-lg border-b border-slate-200 dark:border-slate-800">
+                {isSideBarOpen && <X onClick={() => setIsSideBarOpen(!isSideBarOpen)} />}
                 <span className="text-indigo-600 dark:text-indigo-400">TailAdmin</span>
             </div>
 
