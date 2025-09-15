@@ -3,16 +3,27 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.Model.js";
 import { logger } from "../config/logger.js";
 
-// Generate JWT
-const generateToken = (user) => {
-  return jwt.sign(
+// ---------------- Generate & Store JWT ---------------- //
+const generateAndStoreToken = async (user) => {
+  // If user already has a valid token, return it
+  if (user.token) {
+    return user.token;
+  }
+
+  // Else generate a new one
+  const token = jwt.sign(
     { id: user._id, userType: user.userType },
     process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
+
+  user.token = token; // store token in DB
+  await user.save();
+
+  return token;
 };
 
-// Register User
+// ---------------- Register User ---------------- //
 export const register = async (req, res, next) => {
   try {
     const { name, email, password, contactNo, userType } = req.body;
@@ -36,11 +47,13 @@ export const register = async (req, res, next) => {
       userType,
     });
 
+    const token = await generateAndStoreToken(user);
+
     logger.info(`🟢 User registered: ${email}`);
 
     res.status(201).json({
       message: "User registered successfully",
-      token: generateToken(user),
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -53,7 +66,7 @@ export const register = async (req, res, next) => {
   }
 };
 
-// Login User
+// ---------------- Login User ---------------- //
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -68,11 +81,13 @@ export const login = async (req, res, next) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
+    const token = await generateAndStoreToken(user);
+
     logger.info(`🟢 User logged in: ${email}`);
 
     res.json({
       message: "Login successful",
-      token: generateToken(user),
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -85,7 +100,7 @@ export const login = async (req, res, next) => {
   }
 };
 
-// Update User
+// ---------------- Update User ---------------- //
 export const updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -106,7 +121,7 @@ export const updateUser = async (req, res, next) => {
   }
 };
 
-// Delete User
+// ---------------- Delete User ---------------- //
 export const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -121,7 +136,7 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
-// Get Logged-in User
+// ---------------- Get Logged-in User ---------------- //
 export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -134,7 +149,7 @@ export const getMe = async (req, res, next) => {
   }
 };
 
-// Get Particular User by ID (Admin only)
+// ---------------- Get User by ID (Admin only) ---------------- //
 export const getUserById = async (req, res, next) => {
   try {
     const { id } = req.params;
