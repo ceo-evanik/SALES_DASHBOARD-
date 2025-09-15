@@ -5,9 +5,15 @@ import cluster from "cluster";
 import os from "os";
 import "dotenv/config";
 import { connectDB, disconnectDB } from "./config/db.js";
-import authRoutes from "./routes/authRoutes.js";
 import { errorHandler } from "./middlewares/error.Handler.js";
 import { logger } from "./config/logger.js";
+
+// Routes
+import authRoutes from "./routes/authRoutes.js";
+import leadRoutes from "./routes/leadRoutes.js";
+import invoiceRoutes from "./routes/invoiceRoutes.js";
+import evkTargetRoutes from "./routes/evkTargetRoutes.js";
+import salespersonRoutes from "./routes/salesPerRoutes.js";
 
 const PORT = process.env.PORT || 4003;
 
@@ -48,8 +54,12 @@ if (cluster.isPrimary) {
     });
   });
 
-  // Routes
+  // API Routes
   app.use("/api/auth", authRoutes);
+  app.use("/api/leads", leadRoutes);
+  app.use("/api/invoices", invoiceRoutes);
+  app.use("/api/targets", evkTargetRoutes);
+  app.use("/api/salespersons", salespersonRoutes);
 
   // Error handler
   app.use(errorHandler);
