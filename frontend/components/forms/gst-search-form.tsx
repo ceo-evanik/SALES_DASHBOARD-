@@ -8,7 +8,7 @@ import { Card, CardContent } from "../ui/card"
 export default function GstSearchAndDetailForm() {
     const [gstNumber, setGstNumber] = useState("")
     const [customerName, setCustomerName] = useState("")
-    const [gstDetails, setGstDetails] = useState<any>(null)
+    const [gstDetails, setGstDetails] = useState<GSTData | null>(null)
     const [geminiDetails, setGeminiDetails] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [mode, setMode] = useState<"idle" | "gstSearch" | "manualSearch">("idle")
@@ -39,8 +39,9 @@ export default function GstSearchAndDetailForm() {
     }
 
     useEffect(() => {
+        console.log(gstDetails)
         console.log(geminiDetails)
-    }, [geminiDetails])
+    }, [geminiDetails, gstDetails])
     // Manual Gemini search
     async function handleManualSearch(e: React.FormEvent) {
         e.preventDefault()
@@ -111,18 +112,28 @@ export default function GstSearchAndDetailForm() {
                         <p>{gstDetails.pradr.addr.flno},{gstDetails.pradr.addr.bnm},{gstDetails.pradr.addr.bno},{gstDetails.pradr.addr.st},{gstDetails.pradr.addr.locality},{gstDetails.pradr.addr.loc},{gstDetails.pradr.addr.dst},{gstDetails.pradr.addr.pncd},{gstDetails.pradr.addr.stcd}</p>
                     </div>
 
-                    {gstDetails.natureOfBusiness?.length > 0 && (
+                    {gstDetails.nba?.length > 0 && (
                         <div>
-                            <h4 className="font-semibold mt-4">Nature of Business</h4>
-                            <div className="flex flex-wrap gap-2">
-                                {gstDetails.natureOfBusiness.map((biz: string, idx: number) => (
-                                    <span key={idx} className="px-2 py-1 bg-gray-100 rounded text-sm">
+                            <h4 className="font-semibold mt-4 text-gray-800 dark:text-gray-100">
+                                Nature of Business
+                            </h4>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {gstDetails.nba.map((biz: string, idx: number) => (
+                                    <span
+                                        key={idx}
+                                        className="
+            px-2 py-1 rounded text-sm
+            bg-gray-100 text-gray-800
+            dark:bg-gray-800 dark:text-gray-100
+          "
+                                    >
                                         {biz}
                                     </span>
                                 ))}
                             </div>
                         </div>
                     )}
+
                 </Card>
             )}
 
@@ -151,7 +162,7 @@ export default function GstSearchAndDetailForm() {
 
                 {/* --- Gemini Details --- */}
                 {geminiDetails && (
-                    <Card className="p-4 bg-gray-50">
+                    <Card className="p-4 ">
                         <CardContent className="space-y-2 text-sm">
                             <p><strong>Lead Profile:</strong> {geminiDetails.customerName}</p>
                             <h4 className="font-semibold">Company Overview</h4>
