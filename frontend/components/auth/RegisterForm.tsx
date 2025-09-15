@@ -6,8 +6,15 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { Eye, EyeOff } from "lucide-react";
+import { Avatar, AvatarImage } from "@/components/ui/avatar"; // placeholder avatar
 
 type FormData = {
   name: string;
@@ -15,10 +22,9 @@ type FormData = {
   password: string;
   confirmPassword: string;
   userType: string;
-  contactNumber: string;
 };
 
-export default function RegisterPage() {
+export default function RegisterForm() {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -26,12 +32,15 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     userType: "",
-    contactNumber: "",
   });
 
-  const [loading, setLoading] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<"success" | "error" | null>(
+    null
+  );
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -41,38 +50,83 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      setMessage("Passwords do not match!");
+      setMessageType("error");
       return;
     }
 
+    if (formData.password.length < 6) {
+      setMessage("Password must be at least 6 characters long!");
+      setMessageType("error");
+      return;
+    }
+
+    // ✅ Only backend expected fields
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      userType: formData.userType,
+    };
+
     setLoading(true);
+    setMessage(null);
+
     try {
-      const res = await fetch("https://placeholder-url.com/register", {
+      const res = await fetch("http://localhost:4003/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        router.push("/dashboard");
+        setMessage("✅ Registration successful!");
+        setMessageType("success");
+
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1500);
       } else {
-        router.push("/signin"); // already registered case
+        setMessage(data.message || "❌ Registration failed");
+        setMessageType("error");
       }
     } catch (error) {
-      console.error("Error while registering:", error);
+      setMessage("Something went wrong, please try again.");
+      setMessageType("error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 space-y-6">
+      {/* Avatar Placeholder */}
+      <Avatar className="w-20 h-20">
+        <AvatarImage src="https://ui-avatars.com/api/?name=User" alt="User" />
+      </Avatar>
+
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
-          <CardTitle className="text-center text-xl font-bold">Register</CardTitle>
+          <CardTitle className="text-center text-xl font-bold">
+            Register
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Show Success / Error message */}
+            {message && (
+              <div
+                className={`p-2 rounded text-center text-sm font-medium ${
+                  messageType === "success"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {message}
+              </div>
+            )}
 
             {/* Name */}
             <div>
@@ -138,9 +192,15 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  onClick={() =>
+                    setShowConfirmPassword(!showConfirmPassword)
+                  }
                 >
-                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
                 </button>
               </div>
             </div>
@@ -157,22 +217,11 @@ export default function RegisterPage() {
                   <SelectValue placeholder="Select user type" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="support">Support</SelectItem>
                   <SelectItem value="sales">Sales</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Contact Number */}
-            <div>
-              <Label htmlFor="contactNumber">Contact Number</Label>
-              <Input
-                id="contactNumber"
-                name="contactNumber"
-                value={formData.contactNumber}
-                onChange={handleChange}
-                required
-              />
             </div>
 
             {/* Submit Button */}
@@ -190,7 +239,6 @@ export default function RegisterPage() {
                 Sign In
               </span>
             </p>
-
           </form>
         </CardContent>
       </Card>

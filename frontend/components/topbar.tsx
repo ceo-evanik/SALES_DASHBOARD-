@@ -2,13 +2,11 @@
 
 import { useState } from 'react';
 import {
-    Bell,
-    Sun,
-    Moon,
-    Menu,
-    Search,
-    Settings,
-    LogOut,
+  Bell,
+  Settings,
+  LogOut,
+  Menu,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,20 +20,26 @@ import { ThemeToggle } from './theme-toggle';
 import { useRouter } from 'next/navigation';
 
 export function Topbar() {
-    const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const router = useRouter();
 
-    return (
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] px-4">
-            {/* Mobile sidebar toggle */}
-            <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-            >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle sidebar</span>
-            </Button>
+  const handleLogout = () => {
+    localStorage.removeItem('token'); // Remove auth token
+    router.push('/signin'); // Redirect to Sign In page
+  };
+
+  return (
+    <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] px-4">
+      {/* Mobile sidebar toggle */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="lg:hidden text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+        onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+      >
+        <Menu className="h-5 w-5" />
+        <span className="sr-only">Toggle sidebar</span>
+      </Button>
 
       {/* Search bar */}
       <div className="flex flex-1 items-center max-w-md">
