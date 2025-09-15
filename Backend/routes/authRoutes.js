@@ -13,6 +13,7 @@ import {
   loginValidation,
 } from "../validators/auth.Validators.js";
 import { validateRequest } from "../middlewares/validateReq.js";
+import User from "../models/user.Model.js";
 
 const router = express.Router();
 
@@ -21,9 +22,44 @@ router.post("/register", registerValidation, validateRequest, register);
 router.post("/login", loginValidation, validateRequest, login);
 
 // -------------------- Protected Routes -------------------- //
-router.get("/me", protect, getMe);                                // any logged-in user
-router.get("/:id", protect, authorize("admin"), getUserById);     // admin only
-router.put("/:id", protect, updateUser);                          // logged-in user
-router.delete("/:id", protect, authorize("admin"), deleteUser);   // admin only
+
+// Any logged-in user can see their own profile
+router.get("/me", protect, getMe);
+
+// Admin (or support if needed) can fetch any user by ID
+router.get("/:id", protect, authorize("admin"), getUserById);
+
+// Update user: 
+// - Admin can update anyone
+// - Normal users can only update their own profile
+router.put(
+  "/:id",
+  protect,
+  (req, res, next) => {
+    if (req.user.userType !== "admin" && req.user._id.toString() !== req.params.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You can only update your own profile",
+      });
+    }
+    next();
+  },
+  updateUser
+);
+
+// Only admin can delete users
+router.delete("/:id", protect, authorize("admin"), deleteUser);
+
+// -------------------- Logout Route -------------------- //
+// Clear token from DB so user must login again
+router.post("/logout", protect, async (req, res, next) => {
+  try {
+    req.user.token = null;
+    await req.user.save();
+    res.json({ message: "Logout successful" });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

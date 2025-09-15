@@ -31,6 +31,9 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    token: {
+      type: String, // <-- Store JWT here
+    },
   },
   { timestamps: true }
 );
