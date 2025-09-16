@@ -12,19 +12,20 @@ const orgId = process.env.ZOHO_ORG_ID;
 
 async function zohoRequest(endpoint) {
   const token = await getAccessToken(clientId, clientSecret, refreshToken);
-  const url = `https://www.zohoapis.com/books/v3/${endpoint}&organization_id=${orgId}`;
+  const url = `https://www.zohoapis.com/books/v3/${endpoint}${
+    endpoint.includes("?") ? "&" : "?"
+  }organization_id=${orgId}`;
 
   const { data } = await axios.get(url, {
-    headers: { Authorization: `Zoho-oauthtoken ${token}` }
+    headers: { Authorization: `Zoho-oauthtoken ${token}` },
   });
   return data;
 }
 
-// 🔹 Get invoices
 export async function getZohoBooksInvoices() {
   const data = await zohoRequest("invoices?per_page=200");
   let invoices = data.invoices || [];
-  invoices = invoices.map(inv => ({
+  invoices = invoices.map((inv) => ({
     ...inv,
     date: inv.date ? moment(inv.date).format("YYYY-MM-DD") : null,
     sales_person: inv.salesperson_name || "N/A",
@@ -33,30 +34,26 @@ export async function getZohoBooksInvoices() {
   return invoices;
 }
 
-// 🔹 Get unpaid invoices
 export async function getUnpaidInvoices() {
   const data = await zohoRequest("invoices?status=unpaid&per_page=200");
   return data.invoices || [];
 }
 
-// 🔹 Salesperson unpaid totals
 export async function getSalespersonUnpaidTotals() {
   const unpaid = await getUnpaidInvoices();
   const totals = {};
-  unpaid.forEach(inv => {
+  unpaid.forEach((inv) => {
     const sp = inv.salesperson_name || "Unknown";
-    totals[sp] = (totals[sp] || 0) + parseFloat(inv.balance);
+    totals[sp] = (totals[sp] || 0) + parseFloat(inv.balance || 0);
   });
   return totals;
 }
 
-// 🔹 Estimates
 export async function getZohoBooksEstimates() {
   const data = await zohoRequest("estimates?per_page=200");
   return data.estimates || [];
 }
 
-// 🔹 Current month salesperson summary
 export async function getSalespersonCurrentMonthSummary() {
   const start = moment().startOf("month").format("YYYY-MM-DD");
   const end = moment().endOf("month").format("YYYY-MM-DD");
@@ -66,26 +63,24 @@ export async function getSalespersonCurrentMonthSummary() {
   );
 
   const summary = {};
-  data.invoices.forEach(inv => {
+  (data.invoices || []).forEach((inv) => {
     const sp = inv.salesperson_name || "Unknown";
     if (!summary[sp]) {
       summary[sp] = { total: 0, count: 0 };
     }
-    summary[sp].total += parseFloat(inv.total);
+    summary[sp].total += parseFloat(inv.total || 0);
     summary[sp].count += 1;
   });
 
   return summary;
 }
 
-// 🔹 Overall unpaid invoices
 export async function getOverallUnpaidInvoices() {
   const unpaid = await getUnpaidInvoices();
-  return unpaid.reduce((sum, inv) => sum + parseFloat(inv.balance), 0);
+  return unpaid.reduce((sum, inv) => sum + parseFloat(inv.balance || 0), 0);
 }
 
-// 🔹 PDF download URL
 export async function getInvoicePDFUrl(invoiceId) {
   const token = await getAccessToken(clientId, clientSecret, refreshToken);
-  return `https://www.zohoapis.com/books/v3/invoices/${invoiceId}?organization_id=${orgId}&accept=pdf&authtoken=${token}`;
+  return `https://www.zohoapis.com/books/v3/invoices/${invoiceId}/pdf?organization_id=${orgId}&authtoken=${token}`;
 }

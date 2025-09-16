@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cluster from "cluster";
 import os from "os";
 import "dotenv/config";
+
 import { connectDB, disconnectDB } from "./config/db.js";
 import { errorHandler } from "./middlewares/error.Handler.js";
 import { logger } from "./config/logger.js";
@@ -14,6 +15,7 @@ import leadRoutes from "./routes/leadRoutes.js";
 import invoiceRoutes from "./routes/invoiceRoutes.js";
 import evkTargetRoutes from "./routes/evkTargetRoutes.js";
 import salespersonRoutes from "./routes/salesPerRoutes.js";
+import zohoRoutes from "./routes/zohoRoutes.js"; // ✅ NEW
 
 const PORT = process.env.PORT || 4003;
 
@@ -60,6 +62,7 @@ if (cluster.isPrimary) {
   app.use("/api/invoices", invoiceRoutes);
   app.use("/api/targets", evkTargetRoutes);
   app.use("/api/salespersons", salespersonRoutes);
+  app.use("/api/zoho", zohoRoutes); // ✅ NEW for Zoho sync endpoints
 
   // Error handler
   app.use(errorHandler);

@@ -10,10 +10,10 @@ import { protect, authorize } from "../middlewares/auth.Middleware.js";
 
 const router = express.Router();
 
-router.post("/", protect, authorize("sales"), createInvoice);
-router.get("/", protect, authorize("admin", "sales", "support"), getInvoices);
-router.get("/:id", protect, authorize("admin", "sales", "support"), getInvoiceById);
-router.put("/:id", protect, authorize("sales"), updateInvoice);
+router.post("/", protect, authorize("admin", "sales"), createInvoice);
+router.get("/", protect, getInvoices);
+router.get("/:id", protect, getInvoiceById);
+router.put("/:id", protect, authorize("admin", "sales"), updateInvoice);
 router.delete("/:id", protect, authorize("admin"), deleteInvoice);
 
 export default router;
