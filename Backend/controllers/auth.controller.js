@@ -1,164 +1,88 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "../models/user.Model.js";
+import User from "../models/User.js";
 import { logger } from "../config/logger.js";
 
-// ---------------- Generate & Store JWT ---------------- //
-const generateAndStoreToken = async (user) => {
-  // If user already has a valid token, return it
-  if (user.token) {
-    return user.token;
-  }
-
-  // Else generate a new one
-  const token = jwt.sign(
-    { id: user._id, userType: user.userType },
-    process.env.JWT_SECRET,
-    { expiresIn: "1d" }
-  );
-
-  user.token = token; // store token in DB
-  await user.save();
-
-  return token;
+/**
+ * generateToken -> payload { id, userType }
+ */
+const generateToken = (user) => {
+  return jwt.sign({ id: user._id, userType: user.userType }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
 
-// ---------------- Register User ---------------- //
+// ---------------------- POST /api/auth/register ----------------------
 export const register = async (req, res, next) => {
   try {
     const { name, email, password, contactNo, userType } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email, and password are required" });
+    const total = await User.countDocuments();
+    if (total > 0) {
+      return res.status(403).json({
+        message: "Registration disabled. Please ask an admin to create your account.",
+      });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already registered" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
+    const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({
       name,
       email,
-      password: hashedPassword,
+      password: hashed,
       contactNo,
-      userType,
+      userType: userType || "admin",
     });
 
-    const token = await generateAndStoreToken(user);
+    const token = generateToken(user);
+    logger.info(`Initial user created: ${email}`);
 
-    logger.info(`🟢 User registered: ${email}`);
+    // Convert to object and remove password
+    const userObj = user.toObject();
+    delete userObj.password;
 
     res.status(201).json({
-      message: "User registered successfully",
+      message: "Initial user created",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        userType: user.userType,
-      },
+      user: userObj,
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
-// ---------------- Login User ---------------- //
+// ---------------------- POST /api/auth/login ----------------------
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
-    }
-
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = await generateAndStoreToken(user);
+    const token = generateToken(user);
+    logger.info(`User logged in: ${email}`);
 
-    logger.info(`🟢 User logged in: ${email}`);
+    // Convert to object and remove password
+    const userObj = user.toObject();
+    delete userObj.password;
 
     res.json({
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        userType: user.userType,
-      },
+      user: userObj,
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
-// ---------------- Update User ---------------- //
-export const updateUser = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-
-    if (updates.password) {
-      updates.password = await bcrypt.hash(updates.password, 10);
-    }
-
-    const user = await User.findByIdAndUpdate(id, updates, { new: true });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    logger.info(`🟡 User updated: ${id}`);
-
-    res.json({ message: "User updated", user });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ---------------- Delete User ---------------- //
-export const deleteUser = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const user = await User.findByIdAndDelete(id);
-
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    logger.info(`🔴 User deleted: ${id}`);
-    res.json({ message: "User deleted" });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ---------------- Get Logged-in User ---------------- //
+// ---------------------- GET /api/auth/me ----------------------
 export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-
-    res.status(200).json({ success: true, data: user });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ---------------- Get User by ID (Admin only) ---------------- //
-export const getUserById = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const user = await User.findById(id).select("-password");
-
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-
-    res.status(200).json({ success: true, data: user });
-  } catch (error) {
-    next(error);
+    res.json({ success: true, data: user });
+  } catch (err) {
+    next(err);
   }
 };

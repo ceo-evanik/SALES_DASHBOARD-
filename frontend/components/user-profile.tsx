@@ -2,116 +2,110 @@
 
 import { useUser } from "@/context/UserProvider";
 import { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 
-export default function Profile() {
-  const { user, loading, refreshUser } = useUser();
+export default function ProfilePage() {
+  const { user, loading } = useUser();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
 
-  // Initialize state from user context
   useEffect(() => {
     if (user) {
-      setName(user.name);
-      setEmail(user.email);
+      setName(user.name || '');
+      setEmail(user.email || '');
     }
   }, [user]);
-
-  // Update profile
-  const handleUpdate = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:4003/api/auth/me', {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name, email }),
-      });
-
-      if (res.ok) {
-        toast.success("Profile updated successfully!");
-        refreshUser();
-      } else {
-        toast.error("Update failed!");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Update failed!");
-    }
-  };
 
   if (loading) return <p className="text-center mt-20 text-lg text-gray-500 dark:text-gray-400">Loading...</p>;
   if (!user) return null;
 
   return (
-    <main className="max-w-3xl px-8 py-8 mx-auto rounded-lg bg-white dark:bg-[#1f2937] text-black dark:text-white ">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
 
-      {/* Welcome Section */}
-      <section className="mb-8 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Welcome to Your Profile</h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">
-          Manage your personal information and account settings below.
-        </p>
-      </section>
-
-      {/* Profile Form */}
-      <section className="space-y-6">
-
-        {/* Name */}
-        <div className="space-y-1">
-          <Label className="text-gray-700 dark:text-gray-300 font-medium">Name</Label>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500"
-          />
+        {/* Page Title */}
+        <div className="mb-8 text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold">Profile</h1>
         </div>
 
-        {/* Email */}
-        <div className="space-y-1">
-          <Label className="text-gray-700 dark:text-gray-300 font-medium">Email</Label>
-          <Input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
+        {/* Main Card without border/shadow */}
+        <Card className="mb-8 border-0 shadow-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+          
+          {/* Top Card: Name, User Type & Edit */}
+          <CardHeader className="py-4 px-6 flex justify-between items-center bg-gray-100 dark:bg-gray-700">
+            <div>
+              <CardTitle className="text-xl">{user.name}</CardTitle>
+              <p className="text-gray-600 dark:text-gray-300">{user.userType}</p>
+            </div>
+            <Link href="/dashboard/profile/edit">
+              <Button variant="outline">Edit</Button>
+            </Link>
+          </CardHeader>
 
-        {/* User Type */}
-        <div className="space-y-1">
-          <p className="text-gray-700 dark:text-gray-300 font-medium">User Type</p>
-          <p className="text-gray-600 dark:text-gray-400">{user.userType}</p>
-        </div>
+          {/* Bottom Card: Personal Information */}
+          <CardContent className="pt-6 px-6">
+            <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Name */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  readOnly
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+              </div>
 
-        {/* Status */}
-        <div className="space-y-1">
-          <p className="text-gray-700 dark:text-gray-300 font-medium">Status</p>
-          <p className="text-gray-600 dark:text-gray-400">
-            {'isActive' in user ? (user.isActive ? 'active' : 'inactive') : user.status || 'unknown'}
-          </p>
-        </div>
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email address</Label>
+                <Input
+                  id="email"
+                  value={email}
+                  readOnly
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+              </div>
 
-        {/* Created At */}
-        <div className="space-y-1">
-          <p className="text-gray-700 dark:text-gray-300 font-medium">Created At</p>
-          <p className="text-gray-600 dark:text-gray-400">{new Date(user.createdAt).toLocaleString()}</p>
-        </div>
-      </section>
+              {/* User Type */}
+              <div className="space-y-2">
+                <Label>User Type</Label>
+                <Input
+                  value={user.userType}
+                  readOnly
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+              </div>
 
-      {/* Update Button */}
-      <section className="mt-8 text-center">
-        <Button
-          onClick={handleUpdate}
-          className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          Update Profile
-        </Button>
-      </section>
-    </main>
+              {/* Status */}
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Input
+                  value={'isActive' in user ? (user.isActive ? 'active' : 'inactive') : user.status || 'unknown'}
+                  readOnly
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              {/* Created At */}
+              <div className="space-y-2">
+                <Label>Created At</Label>
+                <Input
+                  value={new Date(user.createdAt).toLocaleString()}
+                  readOnly
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

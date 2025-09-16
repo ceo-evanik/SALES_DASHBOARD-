@@ -1,9 +1,10 @@
-import Profile from "@/components/user-profile"
+import EditProfile from "@/components/edit-profile"
+
 
 function page() {
   return (
     <div>
-        <Profile/>
+      <EditProfile/>
     </div>
   )
 }
