@@ -5,7 +5,7 @@ import { authorize } from "../middlewares/auth.Middleware.js"; // ✅ named impo
 import { adminCreateUser } from "../controllers/user.controller.js";
 import { createUserValidation } from "../validators/user.validator.js";
 import validateRequest from "../middlewares/validateReq.js";
-import { verifyZohoSalesperson } from "../middlewares/zoho.Middleware.js";
+import { verifyZohoSalesperson } from "../middlewares/verifyZohoSalesperson.js";
 
 const router = express.Router();
 

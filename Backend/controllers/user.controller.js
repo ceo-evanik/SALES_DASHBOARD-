@@ -1,3 +1,7 @@
+import User from "../models/User.js";
+import bcrypt from "bcryptjs";
+import {logger} from "../config/logger.js";
+
 export const adminCreateUser = async (req, res, next) => {
   try {
     const {
