@@ -1,5 +1,5 @@
-"use client";
 
+"use client";
 import { useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
+import { useUser } from "@/context/UserProvider";
 
 type LoginData = {
   email: string;
@@ -15,6 +16,7 @@ type LoginData = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { refreshUser } = useUser(); // ✅ import context
   const [formData, setFormData] = useState<LoginData>({
     email: "",
     password: "",
@@ -45,15 +47,16 @@ export default function LoginPage() {
 
       if (res.ok) {
         localStorage.setItem("token", data.token);
+
+        // ✅ update user context immediately
+        await refreshUser();
+
         setMessage("✅ Login successful!");
         setMessageType("success");
 
-        // redirect after 1.5s
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1500);
+        router.push("/dashboard");
       } else {
-        setMessage(data.message ||"❌ Invalid email or password");
+        setMessage(data.message || "❌ Invalid email or password");
         setMessageType("error");
       }
     } catch (error) {
@@ -73,7 +76,6 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Show Success / Error message */}
             {message && (
               <div
                 className={`p-2 rounded text-center text-sm font-medium ${
@@ -86,7 +88,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Email */}
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -99,7 +100,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Password */}
             <div className="relative">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -120,12 +120,10 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Submit Button */}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing In..." : "Sign In"}
             </Button>
 
-            {/* Register Link */}
             <p className="text-sm text-center mt-2">
               Don't have an account?{" "}
               <span

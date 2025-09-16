@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, ChangeEvent, FormEvent } from "react";
@@ -14,7 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Eye, EyeOff } from "lucide-react";
-import { Avatar, AvatarImage } from "@/components/ui/avatar"; // placeholder avatar
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { useUser } from "@/context/UserProvider"; // ✅ import context
 
 type FormData = {
   name: string;
@@ -26,6 +28,7 @@ type FormData = {
 
 export default function RegisterForm() {
   const router = useRouter();
+  const { refreshUser } = useUser(); // ✅ use context
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
@@ -38,9 +41,7 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [messageType, setMessageType] = useState<"success" | "error" | null>(
-    null
-  );
+  const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -61,7 +62,6 @@ export default function RegisterForm() {
       return;
     }
 
-    // ✅ Payload for backend
     const payload = {
       name: formData.name,
       email: formData.email,
@@ -82,17 +82,15 @@ export default function RegisterForm() {
       const data = await res.json();
 
       if (res.ok) {
-        // ✅ Save token in localStorage
         if (data.token) {
           localStorage.setItem("token", data.token);
+          await refreshUser(); // ✅ update user context
         }
 
         setMessage("✅ Registration successful!");
         setMessageType("success");
 
-        setTimeout(() => {
-          router.push("/dashboard"); // Redirect after success
-        }, 1500);
+        router.push("/dashboard");
       } else {
         setMessage(data.message || "❌ Registration failed");
         setMessageType("error");
@@ -107,20 +105,16 @@ export default function RegisterForm() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 space-y-6">
-      {/* Avatar Placeholder */}
       <Avatar className="w-20 h-20">
         <AvatarImage src="https://ui-avatars.com/api/?name=User" alt="User" />
       </Avatar>
 
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
-          <CardTitle className="text-center text-xl font-bold">
-            Register
-          </CardTitle>
+          <CardTitle className="text-center text-xl font-bold">Register</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Show Success / Error message */}
             {message && (
               <div
                 className={`p-2 rounded text-center text-sm font-medium ${
@@ -136,26 +130,13 @@ export default function RegisterForm() {
             {/* Name */}
             <div>
               <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
+              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
 
             {/* Email */}
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
+              <Input id="email" type="email" name="email" value={formData.email} onChange={handleChange} required />
             </div>
 
             {/* Password */}
@@ -197,15 +178,9 @@ export default function RegisterForm() {
                 <button
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  onClick={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
@@ -229,12 +204,10 @@ export default function RegisterForm() {
               </Select>
             </div>
 
-            {/* Submit Button */}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Registering..." : "Register"}
             </Button>
 
-            {/* Already registered link */}
             <p className="text-sm text-center mt-2">
               Already registered?{" "}
               <span
