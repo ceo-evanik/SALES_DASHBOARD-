@@ -1,3 +1,4 @@
+
 // backend/middlewares/validateRequest.js
 import { validationResult } from "express-validator";
 
@@ -10,10 +11,4 @@ export default function validateRequest(req, res, next) {
     });
   }
   next();
-<<<<<<< HEAD
-};
-
-
-=======
 }
->>>>>>> refs/remotes/origin/main
