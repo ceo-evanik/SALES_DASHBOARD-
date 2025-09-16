@@ -15,11 +15,6 @@ import {
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
-interface SidebarProps {
-    role: 'admin' | 'user' | 'guest';
-    isSideBarOpen: boolean;
-    setIsSideBarOpen: (value: boolean) => void;
-}
 
 const adminItems = [
     {
@@ -32,12 +27,11 @@ const adminItems = [
         ],
     },
     {
-        name: 'CRM',
+        name: 'Users',
         icon: Users,
         children: [
-            { name: 'Leads', href: '/crm/leads' },
-            { name: 'Contacts', href: '/crm/contacts' },
-            { name: 'Reports', href: '/crm/reports' },
+            { name: 'Allusers', href: '/users' },
+            { name: 'Create user', href: '/users/create' },
         ],
     },
     { name: 'Calendar', href: '/calendar', icon: Calendar },
@@ -46,9 +40,20 @@ const adminItems = [
     { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
+const salesItems = [
+    {
+        name: 'Dashboard',
+        icon: LayoutDashboard,
+        children: [
+            { name: 'gst_search', href: '/dashboard/gst-search' },
+        ],
+    },
+    { name: 'Profile', href: '/dashboard/profile', icon: User },
+]
+
 export function Sidebar({ role, isSideBarOpen, setIsSideBarOpen }: SidebarProps) {
     const pathname = usePathname()
-    const menuItems = role === 'admin' ? adminItems : []
+    const menuItems = role === 'admin' ? adminItems : salesItems
     const [openItems, setOpenItems] = useState<Record<string, boolean>>({})
 
     const toggleItem = (name: string) => {
@@ -62,7 +67,7 @@ export function Sidebar({ role, isSideBarOpen, setIsSideBarOpen }: SidebarProps)
             {/* Brand */}
             <div className="flex items-center justify-between h-16 px-6 font-bold text-lg border-b border-slate-200 dark:border-slate-800">
                 {isSideBarOpen && <X onClick={() => setIsSideBarOpen(!isSideBarOpen)} />}
-                <span className="text-indigo-600 dark:text-indigo-400">TailAdmin</span>
+                <span className="text-indigo-600 dark:text-indigo-400">Evanik</span>
             </div>
 
             {/* Menu */}
@@ -125,9 +130,9 @@ export function Sidebar({ role, isSideBarOpen, setIsSideBarOpen }: SidebarProps)
                     )
                 )}
 
-           
+
             </nav>
-            
+
         </aside>
     )
 }

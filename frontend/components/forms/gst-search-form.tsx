@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Card, CardContent } from "../ui/card"
@@ -37,11 +37,6 @@ export default function GstSearchAndDetailForm() {
             setLoading(false)
         }
     }
-
-    useEffect(() => {
-        console.log(gstDetails)
-        console.log(geminiDetails)
-    }, [geminiDetails, gstDetails])
     // Manual Gemini search
     async function handleManualSearch(e: React.FormEvent) {
         e.preventDefault()
@@ -109,7 +104,21 @@ export default function GstSearchAndDetailForm() {
 
                     <div>
                         <h4 className="font-semibold mt-4">Principal Place of Business</h4>
-                        <p>{gstDetails.pradr.addr.flno},{gstDetails.pradr.addr.bnm},{gstDetails.pradr.addr.bno},{gstDetails.pradr.addr.st},{gstDetails.pradr.addr.locality},{gstDetails.pradr.addr.loc},{gstDetails.pradr.addr.dst},{gstDetails.pradr.addr.pncd},{gstDetails.pradr.addr.stcd}</p>
+                        <p>
+                            {[
+                                gstDetails?.pradr?.addr?.flno,
+                                gstDetails?.pradr?.addr?.bnm,
+                                gstDetails?.pradr?.addr?.bno,
+                                gstDetails?.pradr?.addr?.st,
+                                gstDetails?.pradr?.addr?.locality,
+                                gstDetails?.pradr?.addr?.loc,
+                                gstDetails?.pradr?.addr?.dst,
+                                gstDetails?.pradr?.addr?.pncd,
+                                gstDetails?.pradr?.addr?.stcd,
+                            ]
+                                .filter(Boolean)
+                                .join(", ")}
+                        </p>
                     </div>
 
                     {gstDetails.nba?.length > 0 && (
@@ -164,7 +173,7 @@ export default function GstSearchAndDetailForm() {
                 {geminiDetails && (
                     <Card className="p-4 ">
                         <CardContent className="space-y-2 text-sm">
-                            <p><strong>Lead Profile:</strong> {geminiDetails.customerName}</p>
+                            <p><strong>Lead Profile:</strong> {geminiDetails.CustomerName}</p>
                             <h4 className="font-semibold">Company Overview</h4>
                             <p><strong>Official Name:</strong> {geminiDetails.customerName}</p>
                             <p><strong>Business Description:</strong> {geminiDetails.businessDescription}</p>

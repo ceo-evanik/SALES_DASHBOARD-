@@ -5,19 +5,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
-type User = {
-  name: string;
-  email: string;
-  userType: string;
-  status: string;
-  createdAt: string;
-};
 
-type UserContextType = {
-  user: User | null;
-  loading: boolean;
-  refreshUser: () => Promise<void>;
-};
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
