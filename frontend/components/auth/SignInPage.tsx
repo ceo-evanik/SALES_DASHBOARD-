@@ -1,5 +1,5 @@
-
 "use client";
+
 import { useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -8,16 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { useUser } from "@/context/UserProvider";
-
-type LoginData = {
-  email: string;
-  password: string;
-};
+import { LoginFormData } from "@/types/auth"; // ✅ import type
 
 export default function LoginPage() {
   const router = useRouter();
-  const { refreshUser } = useUser(); // ✅ import context
-  const [formData, setFormData] = useState<LoginData>({
+  const { refreshUser } = useUser();
+  const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
   });
@@ -47,8 +43,6 @@ export default function LoginPage() {
 
       if (res.ok) {
         localStorage.setItem("token", data.token);
-
-        // ✅ update user context immediately
         await refreshUser();
 
         setMessage("✅ Login successful!");
@@ -60,7 +54,6 @@ export default function LoginPage() {
         setMessageType("error");
       }
     } catch (error) {
-      console.error("Login error:", error);
       setMessage("Something went wrong, please try again.");
       setMessageType("error");
     } finally {
