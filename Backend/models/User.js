@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
-      minlength: 6,
+      minlength: [6, "Password must be at least 6 characters"],
     },
     contactNo: {
       type: String,
@@ -31,8 +31,31 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    token: {
-      type: String, // <-- Store JWT here
+
+    // 🔹 Only for salespersons
+    salespersonId: {
+      type: String,
+      required: function () {
+        return this.userType === "sales";
+      },
+    },
+    department: {
+      type: String,
+      required: function () {
+        return this.userType === "sales";
+      },
+    },
+    supervisorId: {
+      type: String,
+      required: function () {
+        return this.userType === "sales";
+      },
+    },
+    supervisorName: {
+      type: String,
+      required: function () {
+        return this.userType === "sales";
+      },
     },
   },
   { timestamps: true }

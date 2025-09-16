@@ -5,8 +5,6 @@ export const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
       dbName: "sales_dashboard", // change if needed
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
     });
     logger.info("✅ MongoDB connected successfully!");
   } catch (error) {

@@ -1,9 +1,7 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.Model.js";
+import User from "../models/User.js";
 
-/**
- * Protect routes: verify JWT and attach user to req.user
- */
+// 🔹 Protect Routes
 export const protect = async (req, res, next) => {
   let token;
 
@@ -19,15 +17,11 @@ export const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id).select("-password");
-
-    if (!user || user.token !== token) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, invalid token",
-      });
+    if (!user) {
+      return res.status(401).json({ success: false, message: "Not authorized, user not found" });
     }
 
-    req.user = user; // attach user
+    req.user = user; // attach user object
     next();
   } catch (error) {
     return res.status(401).json({
@@ -37,9 +31,7 @@ export const protect = async (req, res, next) => {
   }
 };
 
-/**
- * Role-based access control
- */
+// 🔹 Role-based access control
 export const authorize = (...allowedTypes) => {
   return (req, res, next) => {
     if (!req.user || !allowedTypes.includes(req.user.userType)) {
