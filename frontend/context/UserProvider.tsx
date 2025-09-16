@@ -46,7 +46,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             const json = await res.json();
             setUser(json.data);
         } catch (err) {
-            console.error(err);
+          
             localStorage.removeItem('token');
             router.push('/signin');
             toast.error('Please login again');
