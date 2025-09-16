@@ -5,6 +5,7 @@ import { authorize } from "../middlewares/auth.Middleware.js"; // ✅ named impo
 import { adminCreateUser } from "../controllers/user.controller.js";
 import { createUserValidation } from "../validators/user.validator.js";
 import validateRequest from "../middlewares/validateReq.js";
+import { verifyZohoSalesperson } from "../middlewares/zoho.Middleware.js";
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.post(
   authorize("admin"),              // allow only admin role
   createUserValidation,            // validation for request body
   validateRequest,                 // check validation errors
+  verifyZohoSalesperson,           // check Zoho salesperson
   adminCreateUser                  // controller
 );
 
