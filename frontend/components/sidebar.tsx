@@ -31,7 +31,7 @@ const adminItems = [
         icon: Users,
         children: [
             { name: 'Allusers', href: '/users' },
-            { name: 'Create user', href: '/users/create' },
+            { name: 'Create user', href: '/dashboard/users/create-user' },
         ],
     },
     { name: 'Calendar', href: '/calendar', icon: Calendar },
