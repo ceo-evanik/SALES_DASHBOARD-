@@ -91,10 +91,22 @@ export default function UserPage() {
                                         <TableCell className="whitespace-nowrap">{user.supervisorId}</TableCell>
                                         <TableCell className="whitespace-nowrap">{user.supervisorName}</TableCell>
                                         <TableCell className="whitespace-nowrap">
-                                            <Link href={``}>
-                                                <Button><PlusCircle /></Button>
+                                            <Link
+                                                href={{
+                                                    pathname: "/dashboard/users/add-target",
+                                                    query: {
+                                                        userId: user._id,
+                                                        name: user.name,
+                                                        salespersonId: user.salespersonId,
+                                                    },
+                                                }}
+                                            >
+                                                <Button size="sm" variant="outline">
+                                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Target
+                                                </Button>
                                             </Link>
                                         </TableCell>
+
                                     </TableRow>
                                 ))
                             ) : (
