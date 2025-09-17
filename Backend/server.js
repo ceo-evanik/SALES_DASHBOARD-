@@ -87,7 +87,7 @@ if (cluster.isPrimary) {
   app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/invoices", invoiceRoutes);
-  app.use("/api/targets", evkTargetRoutes);
+  app.use("/api/users/targets", evkTargetRoutes);
   app.use("/api/zoho", zohoRoutes);
 
   // Error handler
