@@ -80,7 +80,15 @@ export async function getOverallUnpaidInvoices() {
   return unpaid.reduce((sum, inv) => sum + parseFloat(inv.balance || 0), 0);
 }
 
-export async function getInvoicePDFUrl(invoiceId) {
+// 🔒 FIXED: stream PDF securely (no token in URL exposed)
+export async function downloadInvoicePDF(invoiceId) {
   const token = await getAccessToken(clientId, clientSecret, refreshToken);
-  return `https://www.zohoapis.com/books/v3/invoices/${invoiceId}/pdf?organization_id=${orgId}&authtoken=${token}`;
+  const url = `https://www.zohoapis.com/books/v3/invoices/${invoiceId}/pdf?organization_id=${orgId}`;
+
+  const res = await axios.get(url, {
+    headers: { Authorization: `Zoho-oauthtoken ${token}` },
+    responseType: "arraybuffer",
+  });
+
+  return res.data; // raw PDF buffer
 }

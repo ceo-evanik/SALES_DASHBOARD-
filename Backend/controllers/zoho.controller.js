@@ -6,7 +6,7 @@ import {
   getZohoBooksEstimates,
   getSalespersonCurrentMonthSummary,
   getOverallUnpaidInvoices,
-  getInvoicePDFUrl,
+  downloadInvoicePDF,
 } from "../services/zohoService.js";
 
 export const fetchInvoices = async (req, res) => {
@@ -57,10 +57,17 @@ export const fetchOverallUnpaid = async (req, res) => {
   }
 };
 
+// 🔒 FIXED: Return PDF directly instead of exposing URL
 export const fetchInvoicePdfUrl = async (req, res) => {
   try {
     const { id } = req.params;
-    res.json({ url: await getInvoicePDFUrl(id) });
+    const pdfBuffer = await downloadInvoicePDF(id);
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="invoice_${id}.pdf"`,
+    });
+    res.send(pdfBuffer);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

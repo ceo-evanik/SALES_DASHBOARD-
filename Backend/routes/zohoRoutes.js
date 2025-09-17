@@ -24,6 +24,8 @@ router.get("/invoices/unpaid-totals", fetchUnpaidTotals);
 router.get("/estimates", fetchEstimates);
 router.get("/summary/month", fetchMonthlySummary);
 router.get("/unpaid/overall", fetchOverallUnpaid);
+
+// 🔒 PDF is now streamed securely
 router.get("/invoice/:id/pdf", fetchInvoicePdfUrl);
 
 export default router;
