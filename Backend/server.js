@@ -3,8 +3,10 @@ import cors from "cors";
 import helmet from "helmet";
 import cluster from "cluster";
 import os from "os";
+import rateLimit from "express-rate-limit";
 import "dotenv/config";
 
+import { env } from "./utils/env.Validators.js"; // ✅ env validator import
 import { connectDB, disconnectDB } from "./config/db.js";
 import { errorHandler } from "./middlewares/error.Handler.js";
 import { logger } from "./config/logger.js";
@@ -16,7 +18,7 @@ import evkTargetRoutes from "./routes/evkTargetRoutes.js";
 import zohoRoutes from "./routes/zohoRoutes.js"; // ✅ NEW
 import userRoutes from "./routes/userRoutes.js"; // ✅ NEW
 
-const PORT = process.env.PORT || 4003;
+const PORT = env.PORT || 4003; // ✅ use validated env
 
 if (cluster.isPrimary) {
   const numCPUs = os.cpus().length;
@@ -42,6 +44,32 @@ if (cluster.isPrimary) {
   app.use(cors({ origin: "*", credentials: true }));
   app.use(helmet());
 
+  // ✅ Global Rate Limiter
+  const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      message: "Too many requests from this IP, please try again later.",
+    },
+  });
+  app.use(globalLimiter);
+
+  // ✅ Stricter limiter for login route
+  const loginLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      message: "Too many login attempts, please try again later.",
+    },
+  });
+  app.use("/api/auth/login", loginLimiter);
+
   // Health check
   app.get("/", (req, res) => {
     res.send("🚀 Server is working");
@@ -57,10 +85,10 @@ if (cluster.isPrimary) {
 
   // API Routes
   app.use("/api/auth", authRoutes);
-  app.use("/api/users", userRoutes); 
+  app.use("/api/users", userRoutes);
   app.use("/api/invoices", invoiceRoutes);
   app.use("/api/targets", evkTargetRoutes);
-  app.use("/api/zoho", zohoRoutes); // ✅ NEW for Zoho sync endpoints
+  app.use("/api/zoho", zohoRoutes);
 
   // Error handler
   app.use(errorHandler);
