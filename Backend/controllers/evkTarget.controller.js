@@ -15,6 +15,13 @@ export const createTarget = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Target with this evkId already exists" });
     }
 
+    // Handle salespersonId / zohoSalespersonId sync
+    if (req.body.salesperson) {
+      req.body.zohoSalespersonId = req.body.salesperson;
+    } else if (req.body.zohoSalespersonId) {
+      req.body.salesperson = req.body.zohoSalespersonId;
+    }
+
     const target = new EvkTarget({
       ...req.body,
       importMeta: {
@@ -24,7 +31,7 @@ export const createTarget = async (req, res, next) => {
       },
     });
 
-    // Auto calculate totals from months (if provided)
+    // Auto calculate totals if months provided
     if (Array.isArray(target.months) && target.months.length > 0) {
       target.totalTarget = target.months.reduce((sum, m) => sum + (m.target || 0), 0);
       target.totalAch = target.months.reduce((sum, m) => sum + (m.achieved || 0), 0);
@@ -37,6 +44,7 @@ export const createTarget = async (req, res, next) => {
     next(err);
   }
 };
+
 
 // -------------------- Update target --------------------
 export const updateTarget = async (req, res, next) => {
@@ -81,7 +89,7 @@ export const updateTarget = async (req, res, next) => {
 // -------------------- Get all targets --------------------
 export const getTargets = async (req, res, next) => {
   try {
-    const targets = await EvkTarget.find().populate("salesperson", "name email userType");
+    const targets = await EvkTarget.find().populate("salesperson", "name email userType supervisorId supervisorName department contactNo");
     res.json({ success: true, data: targets });
   } catch (err) {
     next(err);

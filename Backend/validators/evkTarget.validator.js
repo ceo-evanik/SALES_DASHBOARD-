@@ -3,10 +3,29 @@ import { body } from "express-validator";
 
 export const createTargetValidation = [
   body("evkId").isNumeric().withMessage("evkId must be a number"),
-  body("salesperson").isMongoId().withMessage("Invalid salesperson ObjectId"),
+
+  // Require at least one of salesperson OR zohoSalespersonId
+  body().custom((value, { req }) => {
+    if (!req.body.salesperson && !req.body.zohoSalespersonId) {
+      throw new Error("Either salesperson or zohoSalespersonId is required");
+    }
+    return true;
+  }),
+
+  // If salesperson provided → must be valid ObjectId
+  body("salesperson")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid salesperson ObjectId"),
+
+  // If zohoSalespersonId provided → must be string
+  body("zohoSalespersonId")
+    .optional()
+    .isString()
+    .withMessage("zohoSalespersonId must be a string"),
+
   body("name").isString(),
   body("revenueStream").isString(),
-  body("zohoSalespersonId").isString(),
   body("imageUrl").optional({ nullable: true }).isString(),
   body("totalTarget").isNumeric().withMessage("totalTarget must be a number"),
   body("totalAch").optional().isNumeric(),
@@ -21,10 +40,13 @@ export const createTargetValidation = [
 
 export const updateTargetValidation = [
   body("evkId").optional().isNumeric(),
+
+  // Either field allowed (not both required)
   body("salesperson").optional().isMongoId(),
+  body("zohoSalespersonId").optional().isString(),
+
   body("name").optional().isString(),
   body("revenueStream").optional().isString(),
-  body("zohoSalespersonId").optional().isString(),
   body("imageUrl").optional({ nullable: true }).isString(),
   body("totalTarget").optional().isNumeric(),
   body("totalAch").optional().isNumeric(),
