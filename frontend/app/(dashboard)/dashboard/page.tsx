@@ -1,8 +1,14 @@
 import ProtectedRoute from '@/components/auth/ProtectedRoute'; 
-export default function DashboardPage() {
+import DashboardPageComponent from '@/components/dash';
+import BillingPage from '@/components/billing';
+import ReportPage from '@/components/reports';
+
+export default function MainPage() {   // <-- rename local function
   return (
     <ProtectedRoute>
-      <h1>Dashboard content</h1>
+      <DashboardPageComponent />
+      <BillingPage />
+      <ReportPage />
     </ProtectedRoute>
   );
 }
