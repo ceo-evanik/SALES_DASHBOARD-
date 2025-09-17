@@ -21,9 +21,10 @@ const adminItems = [
         name: 'Dashboard',
         icon: LayoutDashboard,
         children: [
+              { name: 'Dashboard', href: '/dashboard' },
             { name: 'gst_search', href: '/dashboard/gst-search' },
-            { name: 'Analytics', href: '/dashboard/analytics' },
-            { name: 'Marketing', href: '/dashboard/marketing' },
+            { name: 'Analytics', href: '/dashboard/analytics' }
+          
         ],
     },
     {
