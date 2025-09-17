@@ -41,28 +41,32 @@ export default function DashboardPage() {
   return (
     <div className="flex-1 font-sans space-y-4">
 
-      {/* Header */}
-      <Card className="bg-blue-900 text-white shadow-lg rounded-xl">
-        <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-          <div className="flex items-center">
-            <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mr-4 shadow">
-              <BarChart3 className="h-6 w-6 text-blue-900" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl md:text-3xl font-bold">eVanik Enterprise Dashboard</CardTitle>
-              <p className="text-sm md:text-base text-gray-300">
-                Mission: ₹65 Lakhs by October 18 - <span className="font-semibold">7 Weeks to Excellence</span>
-              </p>
-            </div>
-          </div>
-          <div className="text-right text-sm md:text-base space-y-1">
-            <p>Tuesday, September 16, 2025</p>
-            <p>
-              Working Days Remaining: <span className="font-bold text-yellow-300">12</span>
-            </p>
-          </div>
-        </CardHeader>
-      </Card>
+   {/* Header */}
+<Card className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white shadow-xl rounded-2xl">
+  <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+    <div className="flex items-center">
+      <div className="h-12 w-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 shadow-lg">
+        <BarChart3 className="h-6 w-6 text-indigo-700" />
+      </div>
+      <div>
+        <CardTitle className="text-2xl md:text-3xl font-extrabold tracking-tight">
+          eVanik Enterprise Dashboard
+        </CardTitle>
+        <p className="text-sm md:text-base text-gray-200">
+          Mission: <span className="font-semibold text-yellow-300">₹65 Lakhs</span> by October 18 — 
+          <span className="font-semibold"> 7 Weeks to Excellence</span>
+        </p>
+      </div>
+    </div>
+    <div className="text-right text-sm md:text-base space-y-1">
+      <p className="font-medium text-gray-100">Tuesday, September 16, 2025</p>
+      <p>
+        Working Days Remaining:{" "}
+        <span className="font-bold text-emerald-300">12</span>
+      </p>
+    </div>
+  </CardHeader>
+</Card>
 
       {/* Performance Overview */}
       <Card className="shadow-md">
@@ -154,82 +158,38 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Renewal + Acquisitions Overview */}
-      <Card className="shadow-md border-none">
-        <CardHeader className="bg-blue-900 text-white rounded-t-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 mb-4 md:mb-0">
-            <div className="flex items-center space-x-2">
-              <span className="h-2 w-2 rounded-full bg-white"></span>
-              <p>RENEWAL</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="h-2 w-2 rounded-full bg-white"></span>
-              <p>ACQUISITIONS</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center space-x-4 text-xs">
-            <div className="flex items-center space-x-1">
-              <Target className="h-4 w-4" />
-              <p>TOTAL TARGET</p>
-            </div>
-            <div className="flex items-center space-x-1">
-              <BarChart3 className="h-4 w-4" />
-              <p>TOTAL ACHIEVED</p>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Percent className="h-4 w-4" />
-              <p>% ACHIEVEMENT</p>
-            </div>
-          </div>
-        </CardHeader>
+      <Card className="shadow-lg border-none rounded-xl overflow-hidden">
+  <CardHeader className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white rounded-t-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center">
+    {/* Left: Renewal + Acquisition */}
+    <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 mb-4 md:mb-0">
+      <div className="flex items-center space-x-2">
+        <span className="h-2 w-2 rounded-full bg-emerald-300"></span>
+        <p className="text-sm font-medium tracking-wide">RENEWAL</p>
+      </div>
+      <div className="flex items-center space-x-2">
+        <span className="h-2 w-2 rounded-full bg-yellow-300"></span>
+        <p className="text-sm font-medium tracking-wide">ACQUISITIONS</p>
+      </div>
+    </div>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto"> {/* responsive scroll */}
-            <table className="w-full text-left text-sm table-fixed min-w-[800px]">
-              <thead className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 uppercase text-xs">
-            <tr className=" dark:bg-gray-800 text-gray-600 dark:text-gray-300 uppercase text-xs">
-  <th className="p-1 min-w-[80px]">TARGET</th>
-  <th className="p-1 min-w-[80px]">ACHIEVED</th>
-  <th className="p-1 min-w-[50px]">%</th>
-  <th className="p-1 min-w-[80px]">TARGET</th>
-  <th className="p-1 min-w-[80px]">ACHIEVED</th>
-  <th className="p-1 min-w-[50px]">%</th>
-  <th className="p-1 min-w-[100px]">TOTAL TARGET</th>
-  <th className="p-1 min-w-[100px]">TOTAL ACHIEVED</th>
-  <th className=" min-w-[60px]">% ACHIEVEMENT</th>
-  <th className="p-1 min-w-[80px]">BALANCE</th>
-  <th className="p-1 min-w-[50px]">CURRENT AVG</th>
-  <th className="p-1 min-w-[60px]">REQUIRED RATE</th>
-</tr>
+    {/* Right: Stats Legend */}
+    <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm">
+      <div className="flex items-center space-x-1">
+        <Target className="h-4 w-4 text-yellow-300" />
+        <p className="font-medium">TOTAL TARGET</p>
+      </div>
+      <div className="flex items-center space-x-1">
+        <BarChart3 className="h-4 w-4 text-emerald-300" />
+        <p className="font-medium">TOTAL ACHIEVED</p>
+      </div>
+      <div className="flex items-center space-x-1">
+        <Percent className="h-4 w-4 text-pink-300" />
+        <p className="font-medium">% ACHIEVEMENT</p>
+      </div>
+    </div>
+  </CardHeader>
+</Card>
 
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700 text-gray-700 dark:text-gray-200">
-                <tr>
-                  <td className="p-1 truncate">{summary?.Renewal?.target?.toLocaleString() || "-"}</td>
-                  <td className="p-1 truncate">{summary?.Renewal?.achieved?.toLocaleString() || "-"}</td>
-                  <td className="p-1 truncate">{summary?.Renewal?.percent?.toFixed(1) || "-"}%</td>
-                  <td className="p-1 truncate">{summary?.Acquisition?.target?.toLocaleString() || "-"}</td>
-                  <td className="p-1 truncate">{summary?.Acquisition?.achieved?.toLocaleString() || "-"}</td>
-                  <td className="p-1 truncate">{summary?.Acquisition?.percent?.toFixed(1) || "-"}%</td>
-                  <td className="p-1 truncate">{summary?.Total?.target?.toLocaleString() || "-"}</td>
-                  <td className="p-1 text-green-600 dark:text-green-400 font-medium truncate">
-                    {summary?.Total?.achieved?.toLocaleString() || "-"}
-                  </td>
-                  <td className="p-1 text-red-600 dark:text-red-400 font-medium truncate">
-                    {summary?.Total?.percent?.toFixed(1) || "-"}%
-                  </td>
-                  <td className="p-1 truncate">{summary?.Balance?.toLocaleString() || "-"}</td>
-                  <td className="p-1 truncate">{summary?.CurrentAvg?.toLocaleString() || "-"}</td>
-                  <td className="p-1 text-green-600 dark:text-green-400 font-medium truncate">
-                    {summary?.RequiredRate?.toLocaleString() || "-"}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-
-      </Card>
     </div>
   );
 }

@@ -148,31 +148,67 @@ export default function BillingPage() {
       <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
         <table className="min-w-[700px] sm:min-w-[900px] md:min-w-full text-sm text-left border-collapse">
           <thead>
-            <tr className="bg-blue-900 text-white border border-gray-300">
-              <th rowSpan={2} className="px-4 py-2 border border-gray-300 whitespace-nowrap">REVENUE OWNER</th>
-              <th colSpan={displayMonths.length} className="px-4 py-2 text-center border border-gray-300">Revenue Target</th>
-              <th rowSpan={2} className="px-4 py-2 border border-gray-300 whitespace-nowrap">Total Target</th>
-              <th colSpan={displayMonths.length} className="px-4 py-2 text-center border border-gray-300">Achievement</th>
-              <th colSpan={displayMonths.length} className="px-4 py-2 text-center border border-gray-300">Achievement %</th>
-            </tr>
-            <tr className="bg-blue-800 text-white">
-              {displayMonths.map((m) => (
-                <th key={`target-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap">
-                  {getMonthName(m)}
-                </th>
-              ))}
-              {displayMonths.map((m) => (
-                <th key={`ach-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap">
-                  {getMonthName(m)}
-                </th>
-              ))}
-              {displayMonths.map((m) => (
-                <th key={`percent-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap">
-                  {getMonthName(m)}
-                </th>
-              ))}
-            </tr>
-          </thead>
+  <tr className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white">
+    <th
+      rowSpan={2}
+      className="px-4 py-3 border border-gray-200 whitespace-nowrap text-sm font-semibold text-left rounded-tl-lg"
+    >
+      REVENUE OWNER
+    </th>
+    <th
+      colSpan={displayMonths.length}
+      className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold"
+    >
+      Revenue Target
+    </th>
+    <th
+      rowSpan={2}
+      className="px-4 py-3 border border-gray-200 whitespace-nowrap text-sm font-semibold"
+    >
+      Total Target
+    </th>
+    <th
+      colSpan={displayMonths.length}
+      className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold"
+    >
+      Achievement
+    </th>
+    <th
+      colSpan={displayMonths.length}
+      className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold rounded-tr-lg"
+    >
+      Achievement %
+    </th>
+  </tr>
+
+  <tr className="bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white">
+    {displayMonths.map((m) => (
+      <th
+        key={`target-${m}`}
+        className="px-4 py-2 border border-gray-200 whitespace-nowrap text-xs font-medium"
+      >
+        {getMonthName(m)}
+      </th>
+    ))}
+    {displayMonths.map((m) => (
+      <th
+        key={`ach-${m}`}
+        className="px-4 py-2 border border-gray-200 whitespace-nowrap text-xs font-medium"
+      >
+        {getMonthName(m)}
+      </th>
+    ))}
+    {displayMonths.map((m) => (
+      <th
+        key={`percent-${m}`}
+        className="px-4 py-2 border border-gray-200 whitespace-nowrap text-xs font-medium"
+      >
+        {getMonthName(m)}
+      </th>
+    ))}
+  </tr>
+</thead>
+
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredData.length > 0 ? (
               filteredData.map((item, idx) => {
