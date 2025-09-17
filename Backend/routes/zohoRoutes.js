@@ -1,4 +1,3 @@
-// src/routes/zohoRoutes.js
 import express from "express";
 import { protect, authorize } from "../middlewares/auth.Middleware.js";
 import { syncInvoicesFromZoho } from "../controllers/invoice.controller.js";
@@ -25,7 +24,7 @@ router.get("/estimates", fetchEstimates);
 router.get("/summary/month", fetchMonthlySummary);
 router.get("/unpaid/overall", fetchOverallUnpaid);
 
-// 🔒 PDF is now streamed securely
+// 🔒 PDF portal URL instead of direct PDF
 router.get("/invoice/:id/pdf", fetchInvoicePdfUrl);
 
 export default router;

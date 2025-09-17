@@ -1,4 +1,3 @@
-// src/controllers/zohoController.js
 import {
   getZohoBooksInvoices,
   getUnpaidInvoices,
@@ -6,7 +5,7 @@ import {
   getZohoBooksEstimates,
   getSalespersonCurrentMonthSummary,
   getOverallUnpaidInvoices,
-  downloadInvoicePDF,
+  getInvoicePortalUrl,
 } from "../services/zohoService.js";
 
 export const fetchInvoices = async (req, res) => {
@@ -57,17 +56,12 @@ export const fetchOverallUnpaid = async (req, res) => {
   }
 };
 
-// 🔒 FIXED: Return PDF directly instead of exposing URL
+// 🔒 Return portal URL instead of PDF buffer
 export const fetchInvoicePdfUrl = async (req, res) => {
   try {
     const { id } = req.params;
-    const pdfBuffer = await downloadInvoicePDF(id);
-
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="invoice_${id}.pdf"`,
-    });
-    res.send(pdfBuffer);
+    const url = await getInvoicePortalUrl(id);
+    res.json({ portal_url: url });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
