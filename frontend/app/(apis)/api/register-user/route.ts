@@ -53,3 +53,35 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+
+export async function GET(request: NextRequest) {
+    try {
+        const authHeader = request.headers.get("authorization");
+        const res = await fetch("http://localhost:4003/api/users", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                ...(authHeader ? { Authorization: authHeader } : {}),
+            },
+            cache: "no-store", // always fetch fresh data
+        });
+
+        if (!res.ok) {
+            return NextResponse.json(
+                { error: "Failed to fetch users" },
+                { status: res.status }
+            );
+        }
+
+        const data = await res.json();
+        return NextResponse.json(data);
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        return NextResponse.json(
+            { error: "Internal Server Error" },
+            { status: 500 }
+        );
+    }
+}
+
