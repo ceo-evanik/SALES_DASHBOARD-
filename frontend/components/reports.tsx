@@ -40,7 +40,7 @@ const receivables = [
 
 export default function ReportPage() {
   return (
-    <div className="p-2  font-sans  dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="p-2 font-sans dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <div className="flex flex-col lg:flex-row lg:space-x-6 space-y-6 lg:space-y-0">
         {/* Recent Invoices Card */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md w-full lg:w-1/2">

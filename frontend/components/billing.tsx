@@ -30,9 +30,18 @@ const getLastThreeMonths = (): string[] => {
   return months;
 };
 
+// Helper: Convert YYYY-MM to Month Name
+const getMonthName = (monthString: string): string => {
+  const [year, month] = monthString.split("-");
+  const date = new Date(Number(year), Number(month) - 1);
+  return date.toLocaleString("default", { month: "short" }); // "Jul", "Aug", "Sep"
+};
+
 export default function BillingPage() {
   const [data, setData] = useState<SalesData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,53 +98,117 @@ export default function BillingPage() {
     formattedData.push({ name, targets, achieved, achPercent });
   }
 
+  // Apply filters
+  const filteredData = formattedData.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
+    return matchesSearch;
+  });
+
+  const displayMonths = selectedMonth === "all" ? months : [selectedMonth];
+
   if (loading) {
     return <div className="p-8 text-gray-900 dark:text-gray-100">Loading...</div>;
   }
 
   return (
-    <div className="dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100">
-      <h2 className="text-2xl font-semibold mb-4">Customer Revenue Overview</h2>
-      <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
-        <table className="min-w-[700px] text-sm text-left border-collapse">
+    <div className="dark:bg-gray-900 py-8 text-gray-900 dark:text-gray-100">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+        <h2 className="text-2xl font-semibold text-blue-800 dark:text-blue-400">
+          Customer Revenue Overview
+        </h2>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search by Revenue Owner"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-gray-100"
+          />
+
+          {/* Month Filter */}
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-gray-100"
+          >
+            <option value="all">All Months</option>
+            {months.map((m) => (
+              <option key={m} value={m}>
+                {getMonthName(m)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Table wrapper */}
+      <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+        <table className="min-w-[700px] sm:min-w-[900px] md:min-w-full text-sm text-left border-collapse">
           <thead>
-            <tr className="bg-blue-900 text-white">
-              <th rowSpan={2} className="px-4 py-2">Name</th>
-              <th colSpan={months.length} className="px-4 py-2">Revenue Target</th>
-              <th colSpan={months.length} className="px-4 py-2">Achieved</th>
-              <th colSpan={months.length} className="px-4 py-2">Ach %</th>
+            <tr className="bg-blue-900 text-white border border-gray-300">
+              <th rowSpan={2} className="px-4 py-2 border border-gray-300 whitespace-nowrap">REVENUE OWNER</th>
+              <th colSpan={displayMonths.length} className="px-4 py-2 text-center border border-gray-300">Revenue Target</th>
+              <th rowSpan={2} className="px-4 py-2 border border-gray-300 whitespace-nowrap">Total Target</th>
+              <th colSpan={displayMonths.length} className="px-4 py-2 text-center border border-gray-300">Achievement</th>
+              <th colSpan={displayMonths.length} className="px-4 py-2 text-center border border-gray-300">Achievement %</th>
             </tr>
             <tr className="bg-blue-800 text-white">
-              {months.map((m) => (
-                <th key={`target-${m}`} className="px-4 py-2">{m.split("-")[1]}</th>
+              {displayMonths.map((m) => (
+                <th key={`target-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap">
+                  {getMonthName(m)}
+                </th>
               ))}
-              {months.map((m) => (
-                <th key={`ach-${m}`} className="px-4 py-2">{m.split("-")[1]}</th>
+              {displayMonths.map((m) => (
+                <th key={`ach-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap">
+                  {getMonthName(m)}
+                </th>
               ))}
-              {months.map((m) => (
-                <th key={`percent-${m}`} className="px-4 py-2">{m.split("-")[1]}</th>
+              {displayMonths.map((m) => (
+                <th key={`percent-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap">
+                  {getMonthName(m)}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {formattedData.length > 0 ? (
-              formattedData.map((item) => (
-                <tr key={item.name} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="px-4 py-2">{item.name}</td>
-                  {months.map((m) => (
-                    <td key={`t-${item.name}-${m}`} className="px-4 py-2">{item.targets[m]?.toLocaleString() ?? "-"}</td>
-                  ))}
-                  {months.map((m) => (
-                    <td key={`a-${item.name}-${m}`} className="px-4 py-2">{item.achieved[m]?.toLocaleString() ?? "-"}</td>
-                  ))}
-                  {months.map((m) => (
-                    <td key={`p-${item.name}-${m}`} className="px-4 py-2">{item.achPercent[m]}</td>
-                  ))}
-                </tr>
-              ))
+            {filteredData.length > 0 ? (
+              filteredData.map((item, idx) => {
+                const totalTarget = displayMonths.reduce((sum, m) => sum + (item.targets[m] ?? 0), 0);
+                return (
+                  <tr
+                    key={item.name}
+                    className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${idx % 2 === 0 ? "bg-gray-50 dark:bg-gray-800" : ""}`}
+                  >
+                    <td className="px-4 py-2 border border-gray-300 whitespace-nowrap font-medium text-blue-700 dark:text-blue-400">
+                      {item.name}
+                    </td>
+                    {displayMonths.map((m) => (
+                      <td key={`t-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                        {item.targets[m]?.toLocaleString() ?? "-"}
+                      </td>
+                    ))}
+                    <td className="px-4 py-2 border border-gray-300 whitespace-nowrap font-semibold text-green-700 dark:text-green-400">
+                      {totalTarget.toLocaleString()}
+                    </td>
+                    {displayMonths.map((m) => (
+                      <td key={`a-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                        {item.achieved[m]?.toLocaleString() ?? "-"}
+                      </td>
+                    ))}
+                    {displayMonths.map((m) => (
+                      <td key={`p-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                        {item.achPercent[m]}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
             ) : (
               <tr>
-                <td colSpan={1 + 3 * months.length} className="px-4 py-2 text-center text-gray-500">
+                <td colSpan={1 + 4 * displayMonths.length + 1} className="px-4 py-2 text-center border border-gray-300 text-gray-500">
                   No data available
                 </td>
               </tr>
