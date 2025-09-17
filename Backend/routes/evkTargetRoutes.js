@@ -2,32 +2,39 @@ import express from "express";
 import {
   createTarget,
   getTargets,
+  getTarget,
   updateTarget,
   deleteTarget,
   updateAchieved,
   getTargetsSummary,
 } from "../controllers/evkTarget.controller.js";
 import { protect, authorize } from "../middlewares/auth.Middleware.js";
-import { targetValidation, achievedValidation } from "../validators/evkTarget.validator.js";
+import {
+  createTargetValidation,
+  updateTargetValidation,
+  achievedValidation,
+} from "../validators/evkTarget.validator.js";
 
 const router = express.Router();
+// Admin: Create target
+router.post("/", protect, authorize("admin"), createTargetValidation, createTarget);
 
-// Admin create
-router.post("/", protect, authorize("admin"), targetValidation, createTarget);
-
-// Admin + sales + support: list
+// Admin + sales + support: Get all targets
 router.get("/", protect, authorize("admin", "sales", "support"), getTargets);
 
-// Dashboard summary
+// Admin + sales + support: Get summary (must come BEFORE :id)
 router.get("/summary", protect, authorize("admin", "sales", "support"), getTargetsSummary);
 
-// Admin update
-router.put("/:id", protect, authorize("admin"), targetValidation, updateTarget);
+// Admin + sales + support: Get single target
+router.get("/:id", protect, authorize("admin", "sales", "support"), getTarget);
 
-// Admin delete
+// Admin: Update target
+router.put("/:id", protect, authorize("admin"), updateTargetValidation, updateTarget);
+
+// Admin: Delete target
 router.delete("/:id", protect, authorize("admin"), deleteTarget);
 
-// Sales/support update achieved (only own unless admin)
-router.patch("/:id/achieved", protect, authorize("admin", "sales", "support"), achievedValidation, updateAchieved);
+// Admin + sales: Update achieved (moved id BEFORE achieved for better REST style)
+router.patch("/:id/achieved", protect, authorize("admin", "sales"), achievedValidation, updateAchieved);
 
 export default router;

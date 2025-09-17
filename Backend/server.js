@@ -11,10 +11,8 @@ import { logger } from "./config/logger.js";
 
 // Routes
 import authRoutes from "./routes/authRoutes.js";
-import leadRoutes from "./routes/leadRoutes.js";
 import invoiceRoutes from "./routes/invoiceRoutes.js";
 import evkTargetRoutes from "./routes/evkTargetRoutes.js";
-import salespersonRoutes from "./routes/salesPerRoutes.js";
 import zohoRoutes from "./routes/zohoRoutes.js"; // ✅ NEW
 import userRoutes from "./routes/userRoutes.js"; // ✅ NEW
 
@@ -60,10 +58,8 @@ if (cluster.isPrimary) {
   // API Routes
   app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes); 
-  app.use("/api/leads", leadRoutes);
   app.use("/api/invoices", invoiceRoutes);
   app.use("/api/targets", evkTargetRoutes);
-  app.use("/api/salespersons", salespersonRoutes);
   app.use("/api/zoho", zohoRoutes); // ✅ NEW for Zoho sync endpoints
 
   // Error handler
