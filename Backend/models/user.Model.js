@@ -58,7 +58,15 @@ const userSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+// 🔹 Virtual populate: link user -> EvkTarget
+userSchema.virtual("targets", {
+  ref: "EvkTarget",       // Target model
+  localField: "_id",      // User._id
+  foreignField: "userId", // 👈 must match EvkTarget.userId
+});
+
 
 export default mongoose.model("User", userSchema);

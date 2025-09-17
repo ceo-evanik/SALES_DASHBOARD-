@@ -35,6 +35,6 @@ router.put("/:id", protect, authorize("admin"), updateTargetValidation, updateTa
 router.delete("/:id", protect, authorize("admin"), deleteTarget);
 
 // Admin + sales: Update achieved (moved id BEFORE achieved for better REST style)
-router.patch("/:id/achieved", protect, authorize("admin", "sales"), achievedValidation, updateAchieved);
+router.put("/:id/achieved", protect, authorize("admin", "sales"), achievedValidation, updateAchieved);
 
 export default router;

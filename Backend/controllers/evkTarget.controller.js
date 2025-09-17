@@ -12,14 +12,10 @@ export const createTarget = async (req, res, next) => {
 
     const existing = await EvkTarget.findOne({ evkId: req.body.evkId });
     if (existing) {
-      return res.status(400).json({ success: false, message: "Target with this evkId already exists" });
-    }
-
-    // Handle salespersonId / zohoSalespersonId sync
-    if (req.body.salesperson) {
-      req.body.zohoSalespersonId = req.body.salesperson;
-    } else if (req.body.zohoSalespersonId) {
-      req.body.salesperson = req.body.zohoSalespersonId;
+      return res.status(400).json({
+        success: false,
+        message: "Target with this evkId already exists",
+      });
     }
 
     const target = new EvkTarget({
@@ -31,12 +27,6 @@ export const createTarget = async (req, res, next) => {
       },
     });
 
-    // Auto calculate totals if months provided
-    if (Array.isArray(target.months) && target.months.length > 0) {
-      target.totalTarget = target.months.reduce((sum, m) => sum + (m.target || 0), 0);
-      target.totalAch = target.months.reduce((sum, m) => sum + (m.achieved || 0), 0);
-    }
-
     await target.save();
     logger.info(`Target created | evkId=${target.evkId} by ${req.user?.username}`);
     res.status(201).json({ success: true, data: target });
@@ -45,18 +35,12 @@ export const createTarget = async (req, res, next) => {
   }
 };
 
-
-// -------------------- Update target --------------------
+// -------------------- Update target (Admin only) --------------------
 export const updateTarget = async (req, res, next) => {
   try {
     const errs = validationResult(req);
     if (!errs.isEmpty()) {
       return res.status(400).json({ success: false, errors: errs.array() });
-    }
-
-    const target = await EvkTarget.findById(req.params.id);
-    if (!target) {
-      return res.status(404).json({ success: false, message: "Target not found" });
     }
 
     if (req.user.userType !== "admin") {
@@ -66,19 +50,23 @@ export const updateTarget = async (req, res, next) => {
       });
     }
 
-    // Admin can update everything
-    Object.assign(target, req.body);
+    // Add audit fields
+    const updateData = {
+      ...req.body,
+      "importMeta.importedAt": new Date(),
+      "importMeta.importedBy": req.user?.username || "system",
+    };
 
-    // Auto recalc totals if months updated
-    if (Array.isArray(target.months) && target.months.length > 0) {
-      target.totalTarget = target.months.reduce((sum, m) => sum + (m.target || 0), 0);
-      target.totalAch = target.months.reduce((sum, m) => sum + (m.achieved || 0), 0);
+    const target = await EvkTarget.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!target) {
+      return res.status(404).json({ success: false, message: "Target not found" });
     }
 
-    target.importMeta.importedAt = new Date();
-    target.importMeta.importedBy = req.user?.username || "system";
-
-    await target.save();
     logger.info(`Target updated | id=${req.params.id} by ${req.user?.username}`);
     res.json({ success: true, data: target });
   } catch (err) {
@@ -86,10 +74,14 @@ export const updateTarget = async (req, res, next) => {
   }
 };
 
+
 // -------------------- Get all targets --------------------
 export const getTargets = async (req, res, next) => {
   try {
-    const targets = await EvkTarget.find().populate("salesperson", "name email userType supervisorId supervisorName department contactNo");
+    const targets = await EvkTarget.find().populate(
+      "userId",
+      "name email userType supervisorId supervisorName department contactNo"
+    );
     res.json({ success: true, data: targets });
   } catch (err) {
     next(err);
@@ -99,7 +91,10 @@ export const getTargets = async (req, res, next) => {
 // -------------------- Get single target --------------------
 export const getTarget = async (req, res, next) => {
   try {
-    const target = await EvkTarget.findById(req.params.id).populate("salesperson", "name email userType");
+    const target = await EvkTarget.findById(req.params.id).populate(
+      "userId",
+      "name email userType"
+    );
     if (!target) {
       return res.status(404).json({ success: false, message: "Target not found" });
     }
@@ -122,6 +117,7 @@ export const deleteTarget = async (req, res, next) => {
     next(err);
   }
 };
+
 // -------------------- Update achieved (Sales/Admin) --------------------
 export const updateAchieved = async (req, res, next) => {
   try {
@@ -131,7 +127,7 @@ export const updateAchieved = async (req, res, next) => {
     }
 
     const { month, achieved } = req.body;
-    const target = await EvkTarget.findById(req.params.id).populate("salesperson");
+    const target = await EvkTarget.findById(req.params.id);
 
     if (!target) {
       return res.status(404).json({ success: false, message: "Target not found" });
@@ -139,7 +135,7 @@ export const updateAchieved = async (req, res, next) => {
 
     // Authorization: sales can only update their own target
     if (req.user.userType !== "admin") {
-      if (!target.salesperson || target.salesperson._id.toString() !== req.user._id.toString()) {
+      if (!target.userId || target.userId.toString() !== req.user._id.toString()) {
         return res.status(403).json({ success: false, message: "Not authorized to update this target" });
       }
     }
@@ -164,10 +160,12 @@ export const updateAchieved = async (req, res, next) => {
     target.importMeta.importedBy = req.user?.username || "system";
 
     await target.save();
+
     logger.info(
       `Target achieved updated | id=${req.params.id} month=${month} by ${req.user?.username}`
     );
 
+    // ✅ Send clean response (same as createTarget format)
     res.json({ success: true, data: target });
   } catch (err) {
     next(err);
@@ -212,7 +210,9 @@ export const getTargetsSummary = async (req, res, next) => {
     // Totals
     summary.Total.target = summary.Renewal.target + summary.Acquisition.target;
     summary.Total.achieved = summary.Renewal.achieved + summary.Acquisition.achieved;
-    summary.Total.percent = summary.Total.target ? (summary.Total.achieved / summary.Total.target) * 100 : 0;
+    summary.Total.percent = summary.Total.target
+      ? (summary.Total.achieved / summary.Total.target) * 100
+      : 0;
 
     // Extra fields (3-month logic)
     const balance = summary.Total.target - summary.Total.achieved;

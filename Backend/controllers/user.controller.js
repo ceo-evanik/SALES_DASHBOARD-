@@ -1,6 +1,7 @@
 import User from "../models/user.Model.js";
 import bcrypt from "bcryptjs";
 import { logger } from "../config/logger.js";
+import targets from "../models/evkTarget.Model.js";
 
 // -------------------- Create User (Admin only) --------------------
 export const adminCreateUser = async (req, res, next) => {
@@ -58,13 +59,17 @@ export const adminCreateUser = async (req, res, next) => {
 // -------------------- Get all users (exclude admin) --------------------
 export const getAllUsers = async (req, res, next) => {
   try {
-    // Only return users who are not admin
-    const users = await User.find({ userType: { $ne: "admin" } }).select("-password");
+    // Only return users who are not admin + populate their targets
+    const users = await User.find({ userType: { $ne: "admin" } })
+      .select("-password")
+      .populate("targets"); // 👈 include all targets of each user
+
     res.json({ success: true, data: users });
   } catch (err) {
     next(err);
   }
 };
+
 
 
 // -------------------- Get single user --------------------
