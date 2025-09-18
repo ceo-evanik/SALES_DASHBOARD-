@@ -62,7 +62,7 @@ export function Sidebar({ role, isSideBarOpen, setIsSideBarOpen }: SidebarProps)
     }
 
     return (
-        <aside className={`${isSideBarOpen ? "absolute" : "hidden"} h-screen z-10  lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0
+        <aside className={`${isSideBarOpen ? "absolute" : "hidden"} z-10  lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0
             bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white border-r border-slate-200 dark:border-slate-800`}>
 
             {/* Brand */}

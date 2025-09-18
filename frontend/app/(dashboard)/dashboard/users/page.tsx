@@ -91,7 +91,7 @@ export default function UserPage() {
                                         <TableCell className="whitespace-nowrap">{user.department}</TableCell>
                                         <TableCell className="whitespace-nowrap">{user.supervisorId}</TableCell>
                                         <TableCell className="whitespace-nowrap">{user.supervisorName}</TableCell>
-                                        <TableCell className="whitespace-nowrap">
+                                        <TableCell className="whitespace-nowrap flex flex-col items-start gap-2">
                                             <Link
                                                 href={{
                                                     pathname: "/dashboard/users/add-target",

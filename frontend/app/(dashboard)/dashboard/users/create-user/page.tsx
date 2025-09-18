@@ -114,7 +114,7 @@ export default function RegisterSalespersonPage() {
     };
 
     return (
-        <div className="min-h-screen">
+        <div className=" py-10">
             <div className="max-w-2xl mx-auto">
                 <div>
                     <div className='pb-8'>
@@ -233,8 +233,8 @@ export default function RegisterSalespersonPage() {
                                             <SelectValue placeholder="Select department" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="tech">Tech</SelectItem>
-                                            <SelectItem value="non-tech">Non-Tech</SelectItem>
+                                            <SelectItem value="sales">Sales</SelectItem>
+                                            <SelectItem value="support">Support</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     {errors.department && (

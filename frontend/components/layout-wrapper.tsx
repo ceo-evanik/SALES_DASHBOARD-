@@ -11,19 +11,27 @@ export default function LayoutWrapper({
     children: React.ReactNode
 }) {
     const [isSideBarOpen, setIsSideBarOpen] = useState<boolean>(false)
-    const { user, loading } = useUser()
+    const { user } = useUser()
+
     return (
         <div className="flex h-screen bg-white dark:bg-slate-900">
             {/* Sidebar */}
-            <Sidebar isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} role={user?.userType} />
+            <Sidebar
+                isSideBarOpen={isSideBarOpen}
+                setIsSideBarOpen={setIsSideBarOpen}
+                role={user?.userType}
+            />
 
             {/* Main content */}
-            <div className="flex flex-1 flex-col lg:pl-64">
+            <div className="flex flex-1 flex-col lg:pl-64 overflow-hidden">
                 {/* Topbar */}
-                <Topbar isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} />
+                <Topbar
+                    isSideBarOpen={isSideBarOpen}
+                    setIsSideBarOpen={setIsSideBarOpen}
+                />
 
-                {/* Page content */}
-                <main className="flex-1 p-4 overflow-y-auto text-black dark:text-white">
+                {/* Inner Scrollbar (only children) */}
+                <main className="flex-1 overflow-y-auto text-black dark:text-white">
                     {children}
                 </main>
             </div>
