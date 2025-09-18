@@ -1,7 +1,43 @@
+import axios from "axios";
 import EvkTarget from "../models/evkTarget.Model.js";
 import { logger } from "../config/logger.js";
 import { validationResult } from "express-validator";
-// -------------------- Create target (Admin only) --------------------
+
+
+const fetchTotalAchievedFromZoho = async (zohoSalespersonId, monthDate) => {
+  const { data } = await axios.get("http://localhost:4003/api/zoho/invoices");
+
+  // Ensure array format
+  const invoices = Array.isArray(data) ? data : data.data || [];
+
+  const startOfMonth = new Date(monthDate);
+  startOfMonth.setUTCDate(1);
+  startOfMonth.setUTCHours(0, 0, 0, 0);
+
+  const endOfMonth = new Date(startOfMonth);
+  endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
+
+  // Debug log
+  console.log("🔎 Filtering Zoho invoices", {
+    salesperson: zohoSalespersonId,
+    start: startOfMonth,
+    end: endOfMonth,
+    totalInvoices: invoices.length
+  });
+
+  const matched = invoices.filter(inv =>
+    String(inv.salespersonZohoId) === String(zohoSalespersonId) &&
+    new Date(inv.date) >= startOfMonth &&
+    new Date(inv.date) < endOfMonth
+  );
+
+  console.log("✅ Matched invoices:", matched);
+
+  return matched.reduce((sum, inv) => sum + (inv.total || 0), 0);
+};
+
+
+// -------------------- Create target --------------------
 export const createTarget = async (req, res, next) => {
   try {
     const errs = validationResult(req);
@@ -9,56 +45,57 @@ export const createTarget = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errs.array() });
     }
 
-    const { userId, date, evkId } = req.body;
+    const { userId, date, evkId, zohoSalespersonId, totalTarget } = req.body;
 
-    // Normalize date → extract year & month
+    // month range
     const startOfMonth = new Date(date);
     startOfMonth.setUTCDate(1);
     startOfMonth.setUTCHours(0, 0, 0, 0);
-
     const endOfMonth = new Date(startOfMonth);
     endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
 
-    // 🔍 Check if target already exists for same user & month
+    // prevent duplicate target for same month
     const existingTarget = await EvkTarget.findOne({
       userId,
-      date: { $gte: startOfMonth, $lt: endOfMonth }
+      date: { $gte: startOfMonth, $lt: endOfMonth },
     });
-
     if (existingTarget) {
       return res.status(400).json({
         success: false,
-        message: "Target already exists for this user in the given month"
+        message: "Target already exists for this user in the given month",
       });
     }
 
-    // 🔍 Optional: also check evkId uniqueness
+    // prevent duplicate evkId
     const existingEvk = await EvkTarget.findOne({ evkId });
     if (existingEvk) {
       return res.status(400).json({
         success: false,
-        message: "Target with this evkId already exists"
+        message: "Target with this evkId already exists",
       });
     }
 
-    // ✅ Create new target
+    // ✅ Fetch achieved only (totalTarget comes manually from req.body)
+    const totalAch = await fetchTotalAchievedFromZoho(zohoSalespersonId, date);
+
     const target = new EvkTarget({
       ...req.body,
+      totalTarget, // stays manual
+      totalAch,    // auto from Zoho
       importMeta: {
         source: "manual-create",
         importedAt: new Date(),
-        importedBy: req.user?.username || "system"
-      }
+        importedBy: req.user?.username || "system",
+      },
     });
 
     await target.save();
-    logger.info(`Target created | evkId=${target.evkId} by ${req.user?.username}`);
-
     res.status(201).json({ success: true, data: target });
   } catch (err) {
     next(err);
   }
 };
+
 
 // -------------------- Update target (Admin only) --------------------
 export const updateTarget = async (req, res, next) => {
