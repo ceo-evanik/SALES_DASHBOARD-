@@ -138,8 +138,8 @@ export default function DashboardPage() {
       </Card>
 
       {/* Performance Overview */}
-      <Card className="shadow-xl rounded-xl">
-        <CardHeader>
+      <Card className="shadow-xl   rounded-xl">
+        <CardHeader >
           <CardTitle className="text-lg md:text-xl font-semibold text-gray-700 dark:text-gray-200">
             Performance Overview
           </CardTitle>
@@ -202,81 +202,93 @@ export default function DashboardPage() {
       </Card>
 
       {/* Renewal + Acquisitions Table */}
-      <Card className="shadow-xl rounded-xl">
-        <CardHeader className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white rounded-t-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 mb-4 md:mb-0">
-            <div className="flex items-center space-x-2">
-              <span className="h-2 w-2 rounded-full bg-white"></span>
-              <p>RENEWAL</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="h-2 w-2 rounded-full bg-white"></span>
-              <p>ACQUISITIONS</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center space-x-4 text-xs">
-            <div className="flex items-center space-x-1">
-              <Target className="h-4 w-4 text-yellow-200" />
-              <p>TOTAL TARGET</p>
-            </div>
-            <div className="flex items-center space-x-1">
-              <BarChart3 className="h-4 w-4 text-green-200" />
-              <p>TOTAL ACHIEVED</p>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Percent className="h-4 w-4 text-red-200" />
-              <p>% ACHIEVEMENT</p>
-            </div>
-          </div>
-        </CardHeader>
+<Card className="shadow-xl rounded-xl">
+  {/* Table Header */}
+  <CardHeader className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white rounded-t-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center">
+    
+    {/* Renewal & Acquisitions Legend */}
+    <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 mb-4 md:mb-0">
+      <div className="flex items-center space-x-2">
+        <span className="h-2 w-2 rounded-full bg-white"></span>
+        <p>RENEWAL</p>
+      </div>
+      <div className="flex items-center space-x-2">
+        <span className="h-2 w-2 rounded-full bg-white"></span>
+        <p>ACQUISITIONS</p>
+      </div>
+    </div>
 
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="p-6 space-y-3">
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-6 w-1/2" />
-              <Skeleton className="h-6 w-full" />
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm table-fixed min-w-[800px]">
-                <thead className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 uppercase text-xs">
-                  <tr>
-                    <th className="p-1 min-w-[80px]">TARGET</th>
-                    <th className="p-1 min-w-[80px]">ACHIEVED</th>
-                    <th className="p-1 min-w-[50px]">%</th>
-                    <th className="p-1 min-w-[10px]">TOTAL TARGET</th>
-                    <th className="p-1 min-w-[100px]">TOTAL ACHIEVED</th>
-                    <th className="min-w-[60px]">%ACHIEVEMENT</th>
-                    <th className="p-1 min-w-[80px]">BALANCE</th>
-                    <th className="p-1 min-w-[80px]">CURRENT AVG</th>
-                    <th className="p-1 min-w-[100px]">REQUIRED RATE</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700 text-gray-700 dark:text-gray-200">
-                  <tr className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <td className="p-1 truncate">{formatINR(summary?.Acquisition?.target)}</td>
-                    <td className="p-1 truncate">{formatINR(summary?.Acquisition?.achieved)}</td>
-                    <td className="p-1 truncate">{summary?.Acquisition?.percent?.toFixed(1) || "-"}%</td>
-                    <td className="p-1 truncate">{formatINR(summary?.Total?.target)}</td>
-                    <td className="p-1 text-green-600 dark:text-green-400 font-medium truncate">
-                      {formatINR(summary?.Total?.achieved)}
-                    </td>
-                    <td className="p-1 text-red-600 dark:text-red-400 font-medium truncate">
-                      {summary?.Total?.percent?.toFixed(1) || "-"}%
-                    </td>
-                    <td className="p-1 truncate">{formatINR(summary?.Balance)}</td>
-                    <td className="p-1 truncate">{formatINR(summary?.CurrentAvg)}</td>
-                    <td className="p-1 text-green-600 dark:text-green-400 font-medium truncate">
-                      {formatINR(summary?.RequiredRate)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+    {/* Icons Legend */}
+    <div className="flex flex-wrap items-center space-x-4 text-xs">
+      <div className="flex items-center space-x-1">
+        <Target className="h-4 w-4 text-yellow-200" />
+        <p>TOTAL TARGET</p>
+      </div>
+      <div className="flex items-center space-x-1">
+        <BarChart3 className="h-4 w-4 text-green-200" />
+        <p>TOTAL ACHIEVED</p>
+      </div>
+      <div className="flex items-center space-x-1">
+        <Percent className="h-4 w-4 text-red-200" />
+        <p>% ACHIEVEMENT</p>
+      </div>
+    </div>
+  </CardHeader>
+
+  {/* Table Content */}
+  <CardContent className="p-2 md:p-4">
+    {loading ? (
+      <div className="space-y-3">
+        <Skeleton className="h-6 w-3/4" />
+        <Skeleton className="h-6 w-1/2" />
+        <Skeleton className="h-6 w-full" />
+      </div>
+    ) : (
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm table-fixed min-w-[800px] border-collapse">
+          
+          {/* Table Head */}
+          <thead className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 uppercase text-xs">
+            <tr>
+              <th className="p-2 min-w-[80px]">TARGET</th>
+              <th className="p-2 min-w-[80px]">ACHIEVED</th>
+              <th className="p-2 min-w-[50px]">%</th>
+              <th className="p-2 min-w-[100px]">TOTAL TARGET</th>
+              <th className="p-2 min-w-[100px]">TOTAL ACHIEVED</th>
+              <th className="p-2 min-w-[60px]">%ACHIEVEMENT</th>
+              <th className="p-2 min-w-[80px]">BALANCE</th>
+              <th className="p-2 min-w-[80px]">CURRENT AVG</th>
+              <th className="p-2 min-w-[100px]">REQUIRED RATE</th>
+            </tr>
+          </thead>
+
+          {/* Table Body */}
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700 text-gray-700 dark:text-gray-200">
+            <tr className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <td className="p-2 truncate">{formatINR(summary?.Acquisition?.target)}</td>
+              <td className="p-2 truncate">{formatINR(summary?.Acquisition?.achieved)}</td>
+              <td className="p-2 truncate">{summary?.Acquisition?.percent?.toFixed(1) || "-"}%</td>
+              <td className="p-2 truncate">{formatINR(summary?.Total?.target)}</td>
+              <td className="p-2 text-green-600 dark:text-green-400 font-medium truncate">
+                {formatINR(summary?.Total?.achieved)}
+              </td>
+              <td className="p-2 text-red-600 dark:text-red-400 font-medium truncate">
+                {summary?.Total?.percent?.toFixed(1) || "-"}%
+              </td>
+              <td className="p-2 truncate">{formatINR(summary?.Balance)}</td>
+              <td className="p-2 truncate">{formatINR(summary?.CurrentAvg)}</td>
+              <td className="p-2 text-green-600 dark:text-green-400 font-medium truncate">
+                {formatINR(summary?.RequiredRate)}
+              </td>
+            </tr>
+          </tbody>
+
+        </table>
+      </div>
+    )}
+  </CardContent>
+</Card>
+
     </div>
   );
 }

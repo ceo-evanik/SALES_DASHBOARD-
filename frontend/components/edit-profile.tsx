@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
@@ -47,7 +47,8 @@ export default function EditProfile() {
     }
   };
 
-  const fetchProfile = async () => {
+  // ✅ Wrap fetchProfile in useCallback to fix useEffect dependency warning
+  const fetchProfile = useCallback(async () => {
     const userId = getUserIdFromToken();
     if (!userId) return;
 
@@ -74,11 +75,12 @@ export default function EditProfile() {
       } else {
         toast.error("Failed to fetch profile data.");
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : "Error fetching profile.";
       console.error(error);
-      toast.error("Error fetching profile.");
+      toast.error(errMsg);
     }
-  };
+  }, []); // empty deps, stable references only
 
   const updateProfile = async () => {
     if (!profile.name.trim() || !profile.email.trim()) {
@@ -115,9 +117,10 @@ export default function EditProfile() {
       } else {
         throw new Error(data.message || "Update failed");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : "Update failed!";
       console.error(error);
-      toast.error(error.message || "Update failed!");
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -125,7 +128,7 @@ export default function EditProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]); // ✅ fixed missing dependency warning
 
   return (
     <div className="min-h-screen  dark:bg-gray-900 flex items-center justify-center p-4">

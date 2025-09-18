@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { useUser } from "@/context/UserProvider";
-import { LoginFormData } from "@/types/auth"; // ✅ import type
+import { LoginFormData } from "@/types/auth";
 
-export default function LoginPage() {
+export default function SignInPage() {
   const router = useRouter();
   const { refreshUser } = useUser();
+
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -53,7 +54,7 @@ export default function LoginPage() {
         setMessage(data.message || "❌ Invalid email or password");
         setMessageType("error");
       }
-    } catch (error) {
+    } catch {
       setMessage("Something went wrong, please try again.");
       setMessageType("error");
     } finally {
@@ -118,7 +119,7 @@ export default function LoginPage() {
             </Button>
 
             <p className="text-sm text-center mt-2">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <span
                 className="text-blue-600 cursor-pointer hover:underline"
                 onClick={() => router.push("/register")}
