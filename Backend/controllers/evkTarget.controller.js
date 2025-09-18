@@ -1,7 +1,6 @@
 import EvkTarget from "../models/evkTarget.Model.js";
 import { logger } from "../config/logger.js";
 import { validationResult } from "express-validator";
-
 // -------------------- Create target (Admin only) --------------------
 export const createTarget = async (req, res, next) => {
   try {
@@ -10,25 +9,51 @@ export const createTarget = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errs.array() });
     }
 
-    const existing = await EvkTarget.findOne({ evkId: req.body.evkId });
-    if (existing) {
+    const { userId, date, evkId } = req.body;
+
+    // Normalize date → extract year & month
+    const startOfMonth = new Date(date);
+    startOfMonth.setUTCDate(1);
+    startOfMonth.setUTCHours(0, 0, 0, 0);
+
+    const endOfMonth = new Date(startOfMonth);
+    endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
+
+    // 🔍 Check if target already exists for same user & month
+    const existingTarget = await EvkTarget.findOne({
+      userId,
+      date: { $gte: startOfMonth, $lt: endOfMonth }
+    });
+
+    if (existingTarget) {
       return res.status(400).json({
         success: false,
-        message: "Target with this evkId already exists",
+        message: "Target already exists for this user in the given month"
       });
     }
 
+    // 🔍 Optional: also check evkId uniqueness
+    const existingEvk = await EvkTarget.findOne({ evkId });
+    if (existingEvk) {
+      return res.status(400).json({
+        success: false,
+        message: "Target with this evkId already exists"
+      });
+    }
+
+    // ✅ Create new target
     const target = new EvkTarget({
       ...req.body,
       importMeta: {
         source: "manual-create",
         importedAt: new Date(),
-        importedBy: req.user?.username || "system",
-      },
+        importedBy: req.user?.username || "system"
+      }
     });
 
     await target.save();
     logger.info(`Target created | evkId=${target.evkId} by ${req.user?.username}`);
+
     res.status(201).json({ success: true, data: target });
   } catch (err) {
     next(err);
