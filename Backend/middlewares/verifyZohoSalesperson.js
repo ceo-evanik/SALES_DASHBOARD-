@@ -3,10 +3,10 @@ import axios from "axios";
 
 export const verifyZohoSalesperson = async (req, res, next) => {
   try {
-    const { userType, salespersonId, name } = req.body;
+    const { department, salespersonId, name } = req.body;
 
     // Only validate for sales users
-    if (userType !== "sales") return next();
+if (department !== "sales") return next();
 
     // ensure both id and name are present
     if (!salespersonId || !name) {

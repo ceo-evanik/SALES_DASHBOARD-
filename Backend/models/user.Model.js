@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     },
     userType: {
       type: String,
-      enum: ["admin", "user"],
+      enum: ["superadmin", "admin", "user"],
       default: "user",
     },
     isActive: {
@@ -32,39 +32,26 @@ const userSchema = new mongoose.Schema(
       default: true,
     },
 
-    // 🔹 Only for salespersons
-    salespersonId: {
-      type: String,
-      required: function () {
-        return this.userType === "sales";
-      },
-    },
     department: {
       type: String,
-      enum: ["sales", "support"],
+      enum: ["sales", "support", null],
+      default: null,
     },
-    supervisorId: {
+    salespersonId: {
       type: String,
-      required: function () {
-        return this.userType === "sales";
-      },
+      unique: true,
+      sparse: true, // ✅ allows multiple nulls
     },
-    supervisorName: {
-      type: String,
-      required: function () {
-        return this.userType === "sales";
-      },
-    },
+    supervisorId: String,
+    supervisorName: String,
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-// 🔹 Virtual populate: link user -> EvkTarget
 userSchema.virtual("targets", {
-  ref: "EvkTarget",       // Target model
-  localField: "_id",      // User._id
-  foreignField: "userId", // 👈 must match EvkTarget.userId
+  ref: "EvkTarget",
+  localField: "_id",
+  foreignField: "userId",
 });
-
 
 export default mongoose.model("User", userSchema);

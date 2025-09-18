@@ -1,9 +1,7 @@
 import User from "../models/user.Model.js";
 import bcrypt from "bcryptjs";
 import { logger } from "../config/logger.js";
-import targets from "../models/evkTarget.Model.js";
 
-// -------------------- Create User (Admin only) --------------------
 export const adminCreateUser = async (req, res, next) => {
   try {
     const {
@@ -27,50 +25,40 @@ export const adminCreateUser = async (req, res, next) => {
       });
     }
 
-    // --- Check uniqueness ---
-    if (userType === "sales") {
-      const existing = await User.findOne({ salespersonId });
-      if (existing) {
+    // --- Check email uniqueness ---
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.status(400).json({
+        success: false,
+        field: "email",
+        message: "Email already exists",
+      });
+    }
+
+    // --- If salespersonId is passed, enforce uniqueness ---
+    if (salespersonId) {
+      const existingSalesperson = await User.findOne({ salespersonId });
+      if (existingSalesperson) {
         return res.status(400).json({
           success: false,
           field: "salespersonId",
           message: "SalespersonId already exists",
         });
       }
-    } else {
-      const existing = await User.findOne({ email });
-      if (existing) {
-        return res.status(400).json({
-          success: false,
-          field: "email",
-          message: "Email already exists",
-        });
-      }
-    }
-
-    // Ensure required fields for sales users
-    if (
-      userType === "sales" &&
-      (!salespersonId || !department || !supervisorId || !supervisorName)
-    ) {
-      return res.status(400).json({
-        success: false,
-        field: "salesDetails",
-        message: "Missing salesperson details",
-      });
     }
 
     const hashed = await bcrypt.hash(password, 10);
+
     const user = await User.create({
       name,
       email,
       password: hashed,
       contactNo,
       userType,
-      salespersonId: userType === "sales" ? salespersonId : null,
-      department: userType === "sales" ? department : null,
-      supervisorId: userType === "sales" ? supervisorId : null,
-      supervisorName: userType === "sales" ? supervisorName : null,
+      department: department || null,
+      salespersonId: salespersonId || null,   // ✅ always save if provided
+      supervisorId: supervisorId || null,
+      supervisorName: supervisorName || null,
     });
 
     logger.info(`Admin(${req.user.id}) created user: ${email} type=${userType}`);
@@ -83,6 +71,8 @@ export const adminCreateUser = async (req, res, next) => {
     next(err);
   }
 };
+
+
 
 
 // -------------------- Get all users (exclude admin) --------------------
