@@ -73,8 +73,6 @@ export const adminCreateUser = async (req, res, next) => {
 };
 
 
-
-
 // -------------------- Get all users (exclude admin) --------------------
 export const getAllUsers = async (req, res, next) => {
   try {

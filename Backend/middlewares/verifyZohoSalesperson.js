@@ -1,21 +1,20 @@
-// backend/middlewares/verifyZohoSalesperson.js
 import axios from "axios";
 
 export const verifyZohoSalesperson = async (req, res, next) => {
   try {
-    const { department, salespersonId, name } = req.body;
+    const { salespersonId, name } = req.body;
 
-    // Only validate for sales users
-if (department !== "sales") return next();
+    // Only validate if salespersonId is provided
+    if (!salespersonId) return next();
 
-    // ensure both id and name are present
-    if (!salespersonId || !name) {
+    // ensure name is present
+    if (!name) {
       return res.status(400).json({
-        message: "salespersonId and name are required to verify Zoho salesperson",
+        message: "Name is required to verify Zoho salesperson",
       });
     }
 
-    // fetch Zoho invoices (be flexible about response shape)
+    // fetch Zoho invoices (adjust as needed)
     const response = await axios.get("http://localhost:4003/api/zoho/invoices", { timeout: 5000 });
     const invoices = Array.isArray(response.data)
       ? response.data
@@ -24,7 +23,7 @@ if (department !== "sales") return next();
     const normalizedId = String(salespersonId).trim();
     const normalizedName = String(name).trim().toLowerCase();
 
-    // look for a matching invoice record with same id + name
+    // look for a matching invoice record
     const salespersonExists = invoices.some((inv) => {
       const invId = inv.salesperson_id ? String(inv.salesperson_id).trim() : "";
       const invName = String(inv.salesperson_name || inv.sales_person || "").trim().toLowerCase();
