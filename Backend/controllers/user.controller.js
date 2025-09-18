@@ -2,7 +2,6 @@ import User from "../models/user.Model.js";
 import bcrypt from "bcryptjs";
 import { logger } from "../config/logger.js";
 import targets from "../models/evkTarget.Model.js";
-import axios from "axios";
 
 // -------------------- Create User (Admin only) --------------------
 export const adminCreateUser = async (req, res, next) => {
@@ -57,55 +56,16 @@ export const adminCreateUser = async (req, res, next) => {
   }
 };
 
+// -------------------- Get all users (exclude admin) --------------------
 export const getAllUsers = async (req, res, next) => {
   try {
-    // 1️⃣ Fetch all non-admin users with their targets
-    let users = await User.find({ userType: { $ne: "admin" } })
+    // Only return users who are not admin + populate their targets
+    const users = await User.find({ userType: { $ne: "admin" } })
       .select("-password")
-      .populate("targets")
-      .lean();
+      .populate("targets"); // 👈 include all targets of each user
 
-    // 2️⃣ Fetch invoices from Zoho (API once for all users)
-    const { data: invoices } = await axios.get("http://localhost:4003/api/zoho/invoices", {
-      headers: { Authorization: `Zoho-oauthtoken ${process.env.ZOHO_TOKEN}` }
-    });
-
-    // 3️⃣ Process each user’s targets
-    users = users.map((user) => {
-      const updatedTargets = user.targets.map((t) => {
-        const start = new Date(t.date);
-        start.setDate(1);
-        start.setHours(0, 0, 0, 0);
-
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + 1);
-
-        // Match Zoho invoices by salesperson + month
-        const monthInvoices = invoices.filter(
-          (inv) =>
-            inv.salesperson_id === t.zohoSalespersonId &&
-            new Date(inv.date) >= start &&
-            new Date(inv.date) < end
-        );
-
-        const totalAch = monthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
-
-        return {
-          ...t,
-          totalAch
-        };
-      });
-
-      return {
-        ...user,
-        targets: updatedTargets
-      };
-    });
-
-    // 4️⃣ Final response
     res.json({ success: true, data: users });
   } catch (err) {
-    console.error("❌ Error in getAllUsers:", err.message);
     next(err);
   }
 };

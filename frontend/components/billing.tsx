@@ -2,23 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 
-interface SalesData {
-  _id: string;
-  name?: string;
-  date?: string; // ISO string
-  totalTarget?: number;
-  totalAch?: number;
-  salesperson?: { name?: string };
-}
 
-interface FormattedData {
-  name: string;
-  targets: Record<string, number | null>;
-  achieved: Record<string, number | null>;
-  achPercent: Record<string, string>;
-}
-
-// Helper: Get last 3 months in YYYY-MM format
+// Last 3 months in YYYY-MM
 const getLastThreeMonths = (): string[] => {
   const today = new Date();
   const months: string[] = [];
@@ -30,12 +15,16 @@ const getLastThreeMonths = (): string[] => {
   return months;
 };
 
-// Helper: Convert YYYY-MM to Month Name
+// YYYY-MM to short month name
 const getMonthName = (monthString: string): string => {
   const [year, month] = monthString.split("-");
   const date = new Date(Number(year), Number(month) - 1);
-  return date.toLocaleString("default", { month: "short" }); // "Jul", "Aug", "Sep"
+  return date.toLocaleString("default", { month: "short" });
 };
+
+// Indian number formatting
+const formatIndianNumber = (num: number | null | undefined): string =>
+  num === null || num === undefined ? "-" : num.toLocaleString("en-IN");
 
 export default function BillingPage() {
   const [data, setData] = useState<SalesData[]>([]);
@@ -58,6 +47,7 @@ export default function BillingPage() {
 
         const json = await res.json();
         setData(Array.isArray(json.data) ? json.data : []);
+        console.log(json.data)
       } catch (err) {
         console.error("Error fetching data:", err);
         setData([]);
@@ -65,7 +55,6 @@ export default function BillingPage() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
@@ -99,27 +88,22 @@ export default function BillingPage() {
   }
 
   // Apply filters
-  const filteredData = formattedData.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
-  });
+  const filteredData = formattedData.filter((item) =>
+    item.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   const displayMonths = selectedMonth === "all" ? months : [selectedMonth];
 
-  if (loading) {
-    return <div className="p-8 text-gray-900 dark:text-gray-100">Loading...</div>;
-  }
+  if (loading) return <div className="p-8 text-gray-900 dark:text-gray-100">Loading...</div>;
 
   return (
     <div className="dark:bg-gray-900 py-8 text-gray-900 dark:text-gray-100">
+      {/* Header & Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
         <h2 className="text-2xl font-semibold text-blue-800 dark:text-blue-400">
           Customer Revenue Overview
         </h2>
-
-        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
           <input
             type="text"
             placeholder="Search by Revenue Owner"
@@ -127,8 +111,6 @@ export default function BillingPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="px-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-gray-100"
           />
-
-          {/* Month Filter */}
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
@@ -136,117 +118,59 @@ export default function BillingPage() {
           >
             <option value="all">All Months</option>
             {months.map((m) => (
-              <option key={m} value={m}>
-                {getMonthName(m)}
-              </option>
+              <option key={m} value={m}>{getMonthName(m)}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Table wrapper */}
+      {/* Table */}
       <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
-        <table className="min-w-[700px] sm:min-w-[900px] md:min-w-full text-sm text-left border-collapse">
+        <table className="w-full text-sm text-left border-collapse">
           <thead>
-  <tr className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white">
-    <th
-      rowSpan={2}
-      className="px-4 py-3 border border-gray-200 whitespace-nowrap text-sm font-semibold text-left rounded-tl-lg"
-    >
-      REVENUE OWNER
-    </th>
-    <th
-      colSpan={displayMonths.length}
-      className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold"
-    >
-      Revenue Target
-    </th>
-    <th
-      rowSpan={2}
-      className="px-4 py-3 border border-gray-200 whitespace-nowrap text-sm font-semibold"
-    >
-      Total Target
-    </th>
-    <th
-      colSpan={displayMonths.length}
-      className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold"
-    >
-      Achievement
-    </th>
-    <th
-      colSpan={displayMonths.length}
-      className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold rounded-tr-lg"
-    >
-      Achievement %
-    </th>
-  </tr>
-
-  <tr className="bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white">
-    {displayMonths.map((m) => (
-      <th
-        key={`target-${m}`}
-        className="px-4 py-2 border border-gray-200 whitespace-nowrap text-xs font-medium"
-      >
-        {getMonthName(m)}
-      </th>
-    ))}
-    {displayMonths.map((m) => (
-      <th
-        key={`ach-${m}`}
-        className="px-4 py-2 border border-gray-200 whitespace-nowrap text-xs font-medium"
-      >
-        {getMonthName(m)}
-      </th>
-    ))}
-    {displayMonths.map((m) => (
-      <th
-        key={`percent-${m}`}
-        className="px-4 py-2 border border-gray-200 whitespace-nowrap text-xs font-medium"
-      >
-        {getMonthName(m)}
-      </th>
-    ))}
-  </tr>
-</thead>
+            <tr className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white">
+              <th rowSpan={2} className="px-4 py-3 border border-gray-200 text-sm font-semibold text-left rounded-tl-lg">REVENUE OWNER</th>
+              <th colSpan={displayMonths.length} className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold">Revenue Target</th>
+              <th rowSpan={2} className="px-4 py-3 border border-gray-200 text-sm font-semibold">Total Target</th>
+              <th colSpan={displayMonths.length} className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold">Achievement</th>
+              <th colSpan={displayMonths.length} className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold rounded-tr-lg">Achievement %</th>
+            </tr>
+            <tr className="bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white">
+              {displayMonths.map((m) => (
+                <th key={`target-${m}`} className="px-4 py-2 border border-gray-200 text-xs font-medium">{getMonthName(m)}</th>
+              ))}
+              {displayMonths.map((m) => (
+                <th key={`ach-${m}`} className="px-4 py-2 border border-gray-200 text-xs font-medium">{getMonthName(m)}</th>
+              ))}
+              {displayMonths.map((m) => (
+                <th key={`percent-${m}`} className="px-4 py-2 border border-gray-200 text-xs font-medium">{getMonthName(m)}</th>
+              ))}
+            </tr>
+          </thead>
 
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredData.length > 0 ? (
               filteredData.map((item, idx) => {
                 const totalTarget = displayMonths.reduce((sum, m) => sum + (item.targets[m] ?? 0), 0);
                 return (
-                  <tr
-                    key={item.name}
-                    className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${idx % 2 === 0 ? "bg-gray-50 dark:bg-gray-800" : ""}`}
-                  >
-                    <td className="px-4 py-2 border border-gray-300 whitespace-nowrap font-medium text-blue-700 dark:text-blue-400">
-                      {item.name}
-                    </td>
+                  <tr key={item.name} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${idx % 2 === 0 ? "bg-gray-50 dark:bg-gray-800" : ""}`}>
+                    <td className="px-4 py-2 border border-gray-300 font-medium text-blue-700 dark:text-blue-400">{item.name}</td>
                     {displayMonths.map((m) => (
-                      <td key={`t-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                        {item.targets[m]?.toLocaleString() ?? "-"}
-                      </td>
+                      <td key={`t-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300">{formatIndianNumber(item.targets[m])}</td>
                     ))}
-                    <td className="px-4 py-2 border border-gray-300 whitespace-nowrap font-semibold text-green-700 dark:text-green-400">
-                      {totalTarget.toLocaleString()}
-                    </td>
+                    <td className="px-4 py-2 border border-gray-300 font-semibold text-green-700 dark:text-green-400">{formatIndianNumber(totalTarget)}</td>
                     {displayMonths.map((m) => (
-                      <td key={`a-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                        {item.achieved[m]?.toLocaleString() ?? "-"}
-                      </td>
+                      <td key={`a-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300">{formatIndianNumber(item.achieved[m])}</td>
                     ))}
                     {displayMonths.map((m) => (
-                      <td key={`p-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                        {item.achPercent[m]}
-                      </td>
+                      <td key={`p-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300">{item.achPercent[m]}</td>
                     ))}
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={1 + 4 * displayMonths.length + 1} className="px-4 py-2 text-center border border-gray-300 text-gray-500">
-                  No data available
-                </td>
+                <td colSpan={1 + 4 * displayMonths.length + 1} className="px-4 py-2 text-center border border-gray-300 text-gray-500">No data available</td>
               </tr>
             )}
           </tbody>

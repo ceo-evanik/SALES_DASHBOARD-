@@ -1,43 +1,8 @@
-import axios from "axios";
 import EvkTarget from "../models/evkTarget.Model.js";
 import { logger } from "../config/logger.js";
 import { validationResult } from "express-validator";
 
-
-const fetchTotalAchievedFromZoho = async (zohoSalespersonId, monthDate) => {
-  const { data } = await axios.get("http://localhost:4003/api/zoho/invoices");
-
-  // Ensure array format
-  const invoices = Array.isArray(data) ? data : data.data || [];
-
-  const startOfMonth = new Date(monthDate);
-  startOfMonth.setUTCDate(1);
-  startOfMonth.setUTCHours(0, 0, 0, 0);
-
-  const endOfMonth = new Date(startOfMonth);
-  endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
-
-  // Debug log
-  console.log("🔎 Filtering Zoho invoices", {
-    salesperson: zohoSalespersonId,
-    start: startOfMonth,
-    end: endOfMonth,
-    totalInvoices: invoices.length
-  });
-
-  const matched = invoices.filter(inv =>
-    String(inv.salespersonZohoId) === String(zohoSalespersonId) &&
-    new Date(inv.date) >= startOfMonth &&
-    new Date(inv.date) < endOfMonth
-  );
-
-  console.log("✅ Matched invoices:", matched);
-
-  return matched.reduce((sum, inv) => sum + (inv.total || 0), 0);
-};
-
-
-// -------------------- Create target --------------------
+// -------------------- Create target (Admin only) --------------------
 export const createTarget = async (req, res, next) => {
   try {
     const errs = validationResult(req);
@@ -45,43 +10,16 @@ export const createTarget = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errs.array() });
     }
 
-    const { userId, date, evkId, zohoSalespersonId, totalTarget } = req.body;
-
-    // month range
-    const startOfMonth = new Date(date);
-    startOfMonth.setUTCDate(1);
-    startOfMonth.setUTCHours(0, 0, 0, 0);
-    const endOfMonth = new Date(startOfMonth);
-    endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
-
-    // prevent duplicate target for same month
-    const existingTarget = await EvkTarget.findOne({
-      userId,
-      date: { $gte: startOfMonth, $lt: endOfMonth },
-    });
-    if (existingTarget) {
-      return res.status(400).json({
-        success: false,
-        message: "Target already exists for this user in the given month",
-      });
-    }
-
-    // prevent duplicate evkId
-    const existingEvk = await EvkTarget.findOne({ evkId });
-    if (existingEvk) {
+    const existing = await EvkTarget.findOne({ evkId: req.body.evkId });
+    if (existing) {
       return res.status(400).json({
         success: false,
         message: "Target with this evkId already exists",
       });
     }
 
-    // ✅ Fetch achieved only (totalTarget comes manually from req.body)
-    const totalAch = await fetchTotalAchievedFromZoho(zohoSalespersonId, date);
-
     const target = new EvkTarget({
       ...req.body,
-      totalTarget, // stays manual
-      totalAch,    // auto from Zoho
       importMeta: {
         source: "manual-create",
         importedAt: new Date(),
@@ -90,12 +28,12 @@ export const createTarget = async (req, res, next) => {
     });
 
     await target.save();
+    logger.info(`Target created | evkId=${target.evkId} by ${req.user?.username}`);
     res.status(201).json({ success: true, data: target });
   } catch (err) {
     next(err);
   }
 };
-
 
 // -------------------- Update target (Admin only) --------------------
 export const updateTarget = async (req, res, next) => {
@@ -137,60 +75,18 @@ export const updateTarget = async (req, res, next) => {
 };
 
 
+// -------------------- Get all targets --------------------
 export const getTargets = async (req, res, next) => {
   try {
-    const targets = await EvkTarget.find()
-      .populate(
-        "userId",
-        "name email userType supervisorId supervisorName department contactNo"
-      );
-
-    // Fetch all invoices once
-    const { data } = await axios.get(
-      "http://localhost:4003/api/zoho/invoices",
-      {
-        headers: { Authorization: `Zoho-oauthtoken ${process.env.ZOHO_TOKEN}` },
-      }
+    const targets = await EvkTarget.find().populate(
+      "userId",
+      "name email userType supervisorId supervisorName department contactNo"
     );
-    const invoices = Array.isArray(data) ? data : data.data || [];
-
-    // Enrich targets
-    const enriched = targets.map((t) => {
-      if (!t.zohoSalespersonId || !t.date) return t.toObject();
-
-      const startOfMonth = new Date(t.date);
-      startOfMonth.setUTCDate(1);
-      startOfMonth.setUTCHours(0, 0, 0, 0);
-
-      const endOfMonth = new Date(startOfMonth);
-      endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
-
-      // Filter invoices for this salesperson and month
-      const matched = invoices.filter((inv) => {
-        const invDate = new Date(inv.date);
-        return (
-          String(inv.salesperson_id) === String(t.zohoSalespersonId) &&
-          invDate >= startOfMonth &&
-          invDate < endOfMonth
-        );
-      });
-
-      return {
-        ...t.toObject(),
-        matchedCount: matched.length,
-        totalAch: matched.reduce((sum, inv) => sum + (inv.total || 0), 0),
-      };
-    });
-
-    res.json({ success: true, data: enriched });
+    res.json({ success: true, data: targets });
   } catch (err) {
     next(err);
   }
 };
-
-
-
-
 
 // -------------------- Get single target --------------------
 export const getTarget = async (req, res, next) => {

@@ -23,7 +23,6 @@ export default function AddTargetPage() {
     const name = searchParams.get("name") || "";
     const salespersonId = searchParams.get("salespersonId") || "";
 
-    const [evkId, setEvkId] = useState<number>(0); // 👈 state for evkId
     const [revenueStream, setRevenueStream] = useState("Acquisition");
     const [date, setDate] = useState<Date | undefined>(undefined);
     const [totalTarget, setTotalTarget] = useState<number>(0);
@@ -44,17 +43,19 @@ export default function AddTargetPage() {
                     Authorization: token ? `Bearer ${token}` : "",
                 },
                 body: JSON.stringify({
-                    evkId, // 👈 dynamic evkId from input
+                    evkId: 2002,
                     userId,
                     name,
                     revenueStream,
                     zohoSalespersonId: salespersonId,
-                    date: date ? format(date, "yyyy-MM-dd") : null,
+                    date: date ? format(date, "yyyy-MM-dd") : null, // format for API
                     totalTarget,
                     totalAch: 0,
                     imageUrl: null,
                 }),
             });
+
+            console.log(res)
 
             if (!res.ok) {
                 setMessage("Target not created!");
@@ -62,7 +63,6 @@ export default function AddTargetPage() {
                 setMessage("✅ Target created successfully!");
                 setDate(undefined);
                 setTotalTarget(0);
-                setEvkId(0); // reset evkId
             }
         } catch (error) {
             setMessage("❌ Error creating target");
@@ -82,17 +82,6 @@ export default function AddTargetPage() {
                     <Input value={name} disabled />
                 </div>
 
-                {/* EVK ID */}
-                <div>
-                    <Label>EVK ID</Label>
-                    <Input
-                        type="number"
-                        value={evkId}
-                        onChange={(e) => setEvkId(Number(e.target.value))}
-                        required
-                    />
-                </div>
-
                 {/* Revenue Stream */}
                 <div>
                     <Label>Revenue Stream</Label>
@@ -103,7 +92,7 @@ export default function AddTargetPage() {
                     />
                 </div>
 
-                {/* Date Picker */}
+                {/* Date Picker (shadcn calendar) */}
                 <div>
                     <Label>Date</Label>
                     <Popover>
