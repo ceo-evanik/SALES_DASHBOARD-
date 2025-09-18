@@ -16,16 +16,27 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-export default function AddTargetPage() {
+export default function TargetFormPage() {
     const searchParams = useSearchParams();
 
+    // mode comes from query: "create" | "update"
+    const mode = searchParams.get("mode") || "create";
+    const isUpdate = mode === "update";
+
+    // query values (for prefill in update mode)
     const userId = searchParams.get("userId") || "";
     const name = searchParams.get("name") || "";
     const salespersonId = searchParams.get("salespersonId") || "";
 
-    const [revenueStream, setRevenueStream] = useState("Acquisition");
-    const [date, setDate] = useState<Date | undefined>(undefined);
-    const [totalTarget, setTotalTarget] = useState<string>("");
+    const [revenueStream, setRevenueStream] = useState(
+        searchParams.get("revenueStream") || "Acquisition"
+    );
+    const [date, setDate] = useState<Date | undefined>(
+        searchParams.get("date") ? new Date(searchParams.get("date") as string) : undefined
+    );
+    const [totalTarget, setTotalTarget] = useState<string>(
+        searchParams.get("totalTarget") || ""
+    );
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
 
@@ -36,35 +47,43 @@ export default function AddTargetPage() {
 
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch("/api/add-target", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: token ? `Bearer ${token}` : "",
-                },
-                body: JSON.stringify({
-                    userId,
-                    name,
-                    revenueStream,
-                    zohoSalespersonId: salespersonId,
-                    date: date ? format(date, "yyyy-MM-dd") : null, // format for API
-                    totalTarget: Number(totalTarget.trim()) || 0,
-                    totalAch: 0,
-                    imageUrl: null,
-                }),
-            });
 
-            console.log(res)
+            const body = {
+                userId,
+                name,
+                revenueStream,
+                zohoSalespersonId: salespersonId,
+                date: date ? format(date, "yyyy-MM-dd") : null,
+                totalTarget: Number(totalTarget.trim()) || 0,
+                totalAch: 0,
+                imageUrl: null,
+            };
+
+            const res = await fetch(
+                isUpdate ? `/api/target/${userId}` : "/api/target",
+                {
+                    method: isUpdate ? "PUT" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: token ? `Bearer ${token}` : "",
+                    },
+                    body: JSON.stringify(body),
+                }
+            );
 
             if (!res.ok) {
-                setMessage("Target not created!");
+                setMessage(`❌ ${isUpdate ? "Update failed" : "Create failed"}`);
             } else {
-                setMessage("✅ Target created successfully!");
-                setDate(undefined);
-                setTotalTarget("");
+                setMessage(
+                    `✅ Target ${isUpdate ? "updated" : "created"} successfully!`
+                );
+                if (!isUpdate) {
+                    setDate(undefined);
+                    setTotalTarget("");
+                }
             }
         } catch (error) {
-            setMessage("❌ Error creating target");
+            setMessage("❌ Error saving target");
         } finally {
             setLoading(false);
         }
@@ -72,7 +91,9 @@ export default function AddTargetPage() {
 
     return (
         <div className="max-w-lg mx-auto p-6 mt-4 border rounded-lg shadow-md">
-            <h1 className="text-xl font-bold mb-4">Add Target</h1>
+            <h1 className="text-xl font-bold mb-4">
+                {isUpdate ? "Update Target" : "Add Target"}
+            </h1>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Name (read-only) */}
@@ -91,7 +112,7 @@ export default function AddTargetPage() {
                     />
                 </div>
 
-                {/* Date Picker (shadcn calendar) */}
+                {/* Date Picker */}
                 <div>
                     <Label>Date</Label>
                     <Popover>
@@ -129,13 +150,15 @@ export default function AddTargetPage() {
                     />
                 </div>
 
-                {/* Submit Button */}
+                {/* Submit */}
                 <Button type="submit" disabled={loading}>
                     {loading ? (
                         <>
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             Saving...
                         </>
+                    ) : isUpdate ? (
+                        "Update Target"
                     ) : (
                         "Save Target"
                     )}

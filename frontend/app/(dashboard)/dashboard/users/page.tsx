@@ -95,6 +95,7 @@ export default function UserPage() {
                                                 href={{
                                                     pathname: "/dashboard/users/add-target",
                                                     query: {
+                                                        mode: "create",
                                                         userId: user._id,
                                                         name: user.name,
                                                         salespersonId: user.salespersonId,
@@ -103,6 +104,21 @@ export default function UserPage() {
                                             >
                                                 <Button size="sm" variant="outline">
                                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Target
+                                                </Button>
+                                            </Link>
+                                            <Link
+                                                href={{
+                                                    pathname: "/dashboard/users/add-target",
+                                                    query: {
+                                                        mode: "update",
+                                                        userId: user._id,
+                                                        name: user.name,
+                                                        salespersonId: user.salespersonId,
+                                                    },
+                                                }}
+                                            >
+                                                <Button size="sm" variant="outline">
+                                                    <Pencil className="mr-2 h-4 w-4" />Edit Target
                                                 </Button>
                                             </Link>
                                             <Link
