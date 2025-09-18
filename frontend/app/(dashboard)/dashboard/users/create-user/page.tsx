@@ -285,9 +285,8 @@ export default function RegisterSalespersonPage() {
                                         <SelectValue placeholder="Select user type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="sales">Sales</SelectItem>
+                                        <SelectItem value="user">User</SelectItem>
                                         <SelectItem value="admin">Admin</SelectItem>
-                                        <SelectItem value="support">Support</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <p className="text-sm text-muted-foreground">

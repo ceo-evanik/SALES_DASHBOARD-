@@ -25,7 +25,7 @@ export default function AddTargetPage() {
 
     const [revenueStream, setRevenueStream] = useState("Acquisition");
     const [date, setDate] = useState<Date | undefined>(undefined);
-    const [totalTarget, setTotalTarget] = useState<number>(0);
+    const [totalTarget, setTotalTarget] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
 
@@ -43,13 +43,12 @@ export default function AddTargetPage() {
                     Authorization: token ? `Bearer ${token}` : "",
                 },
                 body: JSON.stringify({
-                    evkId: 2002,
                     userId,
                     name,
                     revenueStream,
                     zohoSalespersonId: salespersonId,
                     date: date ? format(date, "yyyy-MM-dd") : null, // format for API
-                    totalTarget,
+                    totalTarget: Number(totalTarget.trim()) || 0,
                     totalAch: 0,
                     imageUrl: null,
                 }),
@@ -62,7 +61,7 @@ export default function AddTargetPage() {
             } else {
                 setMessage("✅ Target created successfully!");
                 setDate(undefined);
-                setTotalTarget(0);
+                setTotalTarget("");
             }
         } catch (error) {
             setMessage("❌ Error creating target");
@@ -72,7 +71,7 @@ export default function AddTargetPage() {
     }
 
     return (
-        <div className="max-w-lg mx-auto p-6 border rounded-lg shadow-md">
+        <div className="max-w-lg mx-auto p-6 mt-4 border rounded-lg shadow-md">
             <h1 className="text-xl font-bold mb-4">Add Target</h1>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -123,9 +122,9 @@ export default function AddTargetPage() {
                 <div>
                     <Label>Total Target</Label>
                     <Input
-                        type="number"
+                        type="text"
                         value={totalTarget}
-                        onChange={(e) => setTotalTarget(Number(e.target.value))}
+                        onChange={(e) => setTotalTarget(e.target.value)}
                         required
                     />
                 </div>

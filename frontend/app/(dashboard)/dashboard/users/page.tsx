@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Loader2, Pencil, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -105,6 +105,24 @@ export default function UserPage() {
                                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Target
                                                 </Button>
                                             </Link>
+                                            <Link
+                                                href={{
+                                                    pathname: "/dashboard/users/update-user",
+                                                    query: {
+                                                        userId: user._id,
+                                                        email: user.email,
+                                                        contactNo: user.contactNo,
+                                                        department: user.department,
+                                                        supervisorId: user.supervisorId,
+                                                        supervisorName: user.supervisorName,
+                                                    },
+                                                }}
+                                            >
+                                                <Button size="sm" variant="outline">
+                                                    <Pencil className="mr-2 h-4 w-4" /> Edit User
+                                                </Button>
+                                            </Link>
+
                                         </TableCell>
 
                                     </TableRow>

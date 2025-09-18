@@ -85,3 +85,50 @@ export async function GET(request: NextRequest) {
     }
 }
 
+export async function PUT(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const authHeader = request.headers.get("authorization");
+
+        // Require userId for updates
+        if (!body.userId) {
+            return NextResponse.json(
+                { message: "Missing required field: userId" },
+                { status: 400 }
+            );
+        }
+
+        // Send update request to backend API
+        const response = await fetch(
+            `http://localhost:4003/api/users/${body.userId}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(authHeader ? { Authorization: authHeader } : {}),
+                },
+                body: JSON.stringify(body),
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            return NextResponse.json(
+                { message: data.message || "Update failed" },
+                { status: response.status }
+            );
+        }
+
+        return NextResponse.json(
+            { message: "User updated successfully", data },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error("Update error:", error);
+        return NextResponse.json(
+            { message: "Internal server error" },
+            { status: 500 }
+        );
+    }
+}
