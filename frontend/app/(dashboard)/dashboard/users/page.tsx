@@ -42,6 +42,7 @@ export default function UserPage() {
                 });
 
                 const data = await res.json();
+                console.log(data.data)
                 setUsers(data.data || []);
             } catch (error) {
                 console.error("Error fetching users:", error);
@@ -103,6 +104,15 @@ export default function UserPage() {
                                             >
                                                 <Button size="sm" variant="outline">
                                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Target
+                                                </Button>
+                                            </Link>
+                                            <Link
+                                                href={{
+                                                    pathname: "/dashboard/users/add-target",
+                                                }}
+                                            >
+                                                <Button size="sm" variant="outline">
+                                                    <PlusCircle className="mr-2 h-4 w-4" /> Update Target
                                                 </Button>
                                             </Link>
                                         </TableCell>
