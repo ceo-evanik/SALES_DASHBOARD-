@@ -1,6 +1,7 @@
 import EvkTarget from "../models/evkTarget.Model.js";
 import { logger } from "../config/logger.js";
 import { validationResult } from "express-validator";
+import axios from "axios";
 
 // -------------------- Create target (Admin only) --------------------
 export const createTarget = async (req, res, next) => {
@@ -119,19 +120,45 @@ export const deleteTarget = async (req, res, next) => {
 };
 
 
+
 export const getTargetsSummary = async (req, res, next) => {
   try {
-    // Fetch all targets
     const targets = await EvkTarget.find();
 
-    // Ensure totalAch is updated from months
-    targets.forEach(target => {
-      if (Array.isArray(target.months)) {
-        target.totalAch = target.months.reduce((sum, m) => sum + (m.achieved || 0), 0);
-      }
+    // 1️⃣ Fetch all Zoho invoices
+    const { data } = await axios.get("http://localhost:4003/api/zoho/invoices", {
+      headers: { Authorization: `Zoho-oauthtoken ${process.env.ZOHO_TOKEN}` },
+    });
+    const invoices = Array.isArray(data) ? data : data.data || [];
+
+    // 2️⃣ Calculate totalAch for each target from Zoho invoices
+    targets.forEach(t => {
+      const startOfMonth = new Date(t.date);
+      startOfMonth.setUTCDate(1);
+      startOfMonth.setUTCHours(0, 0, 0, 0);
+      const endOfMonth = new Date(startOfMonth);
+      endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
+
+      const matched = invoices.filter(inv => {
+        const invDate = new Date(inv.date);
+        return (
+          String(inv.salesperson_id) === String(t.zohoSalespersonId) &&
+          invDate >= startOfMonth &&
+          invDate < endOfMonth
+        );
+      });
+
+      const zohoTotal = matched.reduce((sum, inv) => sum + (inv.total || 0), 0);
+
+      // Combine with local months array (if exists)
+      const monthsTotal = Array.isArray(t.months)
+        ? t.months.reduce((sum, m) => sum + (m.achieved || 0), 0)
+        : 0;
+
+      t.totalAch = zohoTotal + monthsTotal;
     });
 
-    // Aggregate by revenueStream
+    // 3️⃣ Aggregate summary
     const summary = {
       Renewal: { target: 0, achieved: 0, percent: 0 },
       Acquisition: { target: 0, achieved: 0, percent: 0 },
@@ -140,31 +167,30 @@ export const getTargetsSummary = async (req, res, next) => {
 
     targets.forEach(t => {
       const stream = t.revenueStream?.toLowerCase();
+      const targetValue = t.totalTarget || 0;
+      const achievedValue = t.totalAch || 0;
+
       if (stream === "renewal") {
-        summary.Renewal.target += t.totalTarget;
-        summary.Renewal.achieved += t.totalAch;
+        summary.Renewal.target += targetValue;
+        summary.Renewal.achieved += achievedValue;
       } else {
-        summary.Acquisition.target += t.totalTarget;
-        summary.Acquisition.achieved += t.totalAch;
+        summary.Acquisition.target += targetValue;
+        summary.Acquisition.achieved += achievedValue;
       }
     });
 
-    // Percentages
     summary.Renewal.percent = summary.Renewal.target
       ? (summary.Renewal.achieved / summary.Renewal.target) * 100
       : 0;
-
     summary.Acquisition.percent = summary.Acquisition.target
       ? (summary.Acquisition.achieved / summary.Acquisition.target) * 100
       : 0;
-
     summary.Total.target = summary.Renewal.target + summary.Acquisition.target;
     summary.Total.achieved = summary.Renewal.achieved + summary.Acquisition.achieved;
     summary.Total.percent = summary.Total.target
       ? (summary.Total.achieved / summary.Total.target) * 100
       : 0;
 
-    // Extra 3-month logic
     const balance = summary.Total.target - summary.Total.achieved;
     const currentAvg = summary.Total.achieved / 3;
     const requiredRate = balance / 3;
@@ -184,3 +210,4 @@ export const getTargetsSummary = async (req, res, next) => {
     next(err);
   }
 };
+
