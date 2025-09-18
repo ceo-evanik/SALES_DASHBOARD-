@@ -24,8 +24,8 @@ const userSchema = new mongoose.Schema(
     },
     userType: {
       type: String,
-      enum: ["admin", "support", "sales"],
-      default: "sales",
+      enum: ["admin", "user"],
+      default: "user",
     },
     isActive: {
       type: Boolean,
@@ -41,9 +41,7 @@ const userSchema = new mongoose.Schema(
     },
     department: {
       type: String,
-      required: function () {
-        return this.userType === "sales";
-      },
+      enum: ["sales", "support"],
     },
     supervisorId: {
       type: String,

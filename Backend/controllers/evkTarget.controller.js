@@ -76,18 +76,27 @@ export const updateTarget = async (req, res, next) => {
 };
 
 
-// -------------------- Get all targets --------------------
 export const getTargets = async (req, res, next) => {
   try {
     const targets = await EvkTarget.find().populate(
       "userId",
       "name email userType supervisorId supervisorName department contactNo"
     );
-    res.json({ success: true, data: targets });
+
+    // Convert userId → user in the response
+    const formattedTargets = targets.map(t => {
+      const obj = t.toObject();
+      obj.user = obj.userId;  // rename field
+      delete obj.userId;      // remove old field
+      return obj;
+    });
+
+    res.json({ success: true, data: formattedTargets });
   } catch (err) {
     next(err);
   }
 };
+
 
 // -------------------- Get single target --------------------
 export const getTarget = async (req, res, next) => {
