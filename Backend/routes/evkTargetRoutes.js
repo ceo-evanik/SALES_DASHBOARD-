@@ -5,14 +5,12 @@ import {
   getTarget,
   updateTarget,
   deleteTarget,
-  updateAchieved,
   getTargetsSummary,
 } from "../controllers/evkTarget.controller.js";
 import { protect, authorize } from "../middlewares/auth.Middleware.js";
 import {
   createTargetValidation,
   updateTargetValidation,
-  achievedValidation,
 } from "../validators/evkTarget.validator.js";
 
 const router = express.Router();
@@ -34,7 +32,5 @@ router.put("/:id", protect, authorize("admin"), updateTargetValidation, updateTa
 // Admin: Delete target
 router.delete("/:id", protect, authorize("admin"), deleteTarget);
 
-// Admin + sales: Update achieved (moved id BEFORE achieved for better REST style)
-router.put("/:id/achieved", protect, authorize("admin", "sales"), achievedValidation, updateAchieved);
 
 export default router;

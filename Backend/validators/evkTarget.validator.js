@@ -2,7 +2,6 @@
 import { body } from "express-validator";
 
 export const createTargetValidation = [
-  body("evkId").isNumeric().withMessage("evkId must be a number"),
 
   // Require at least one of salesperson OR zohoSalespersonId
   body().custom((value, { req }) => {
@@ -39,7 +38,6 @@ export const createTargetValidation = [
 ];
 
 export const updateTargetValidation = [
-  body("evkId").optional().isNumeric(),
 
   // Either field allowed (not both required)
   body("salesperson").optional().isMongoId(),
@@ -59,6 +57,3 @@ export const updateTargetValidation = [
   body("months.*.achieved").optional().isNumeric(),
 ];
 
-export const achievedValidation = [
-  body("achieved").isNumeric().withMessage("Achieved must be a number"),
-];

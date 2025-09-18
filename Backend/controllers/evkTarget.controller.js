@@ -118,103 +118,53 @@ export const deleteTarget = async (req, res, next) => {
   }
 };
 
-// -------------------- Update achieved (Sales/Admin) --------------------
-export const updateAchieved = async (req, res, next) => {
-  try {
-    const errs = validationResult(req);
-    if (!errs.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errs.array() });
-    }
 
-    const { month, achieved } = req.body;
-    const target = await EvkTarget.findById(req.params.id);
-
-    if (!target) {
-      return res.status(404).json({ success: false, message: "Target not found" });
-    }
-
-    // Authorization: sales can only update their own target
-    if (req.user.userType !== "admin") {
-      if (!target.userId || target.userId.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ success: false, message: "Not authorized to update this target" });
-      }
-    }
-
-    // Ensure months array exists
-    if (!Array.isArray(target.months)) {
-      target.months = [];
-    }
-
-    // Update monthly entry
-    const monthEntry = target.months.find((m) => m.month === month);
-    if (monthEntry) {
-      monthEntry.achieved = achieved;
-    } else {
-      target.months.push({ month, achieved, target: 0 });
-    }
-
-    // Recalculate total achieved
-    target.totalAch = target.months.reduce((sum, m) => sum + (m.achieved || 0), 0);
-
-    target.importMeta.importedAt = new Date();
-    target.importMeta.importedBy = req.user?.username || "system";
-
-    await target.save();
-
-    logger.info(
-      `Target achieved updated | id=${req.params.id} month=${month} by ${req.user?.username}`
-    );
-
-    // ✅ Send clean response (same as createTarget format)
-    res.json({ success: true, data: target });
-  } catch (err) {
-    next(err);
-  }
-};
-
-
-// -------------------- Get targets summary --------------------
 export const getTargetsSummary = async (req, res, next) => {
   try {
-    const agg = await EvkTarget.aggregate([
-      {
-        $group: {
-          _id: "$revenueStream",
-          target: { $sum: "$totalTarget" },
-          achieved: { $sum: "$totalAch" },
-        },
-      },
-    ]);
+    // Fetch all targets
+    const targets = await EvkTarget.find();
 
+    // Ensure totalAch is updated from months
+    targets.forEach(target => {
+      if (Array.isArray(target.months)) {
+        target.totalAch = target.months.reduce((sum, m) => sum + (m.achieved || 0), 0);
+      }
+    });
+
+    // Aggregate by revenueStream
     const summary = {
       Renewal: { target: 0, achieved: 0, percent: 0 },
       Acquisition: { target: 0, achieved: 0, percent: 0 },
       Total: { target: 0, achieved: 0, percent: 0 },
     };
 
-    for (const row of agg) {
-      const stream = row._id?.toLowerCase();
+    targets.forEach(t => {
+      const stream = t.revenueStream?.toLowerCase();
       if (stream === "renewal") {
-        summary.Renewal.target = row.target;
-        summary.Renewal.achieved = row.achieved;
-        summary.Renewal.percent = row.target ? (row.achieved / row.target) * 100 : 0;
+        summary.Renewal.target += t.totalTarget;
+        summary.Renewal.achieved += t.totalAch;
       } else {
-        summary.Acquisition.target += row.target;
-        summary.Acquisition.achieved += row.achieved;
-        summary.Acquisition.percent = summary.Acquisition.target
-          ? (summary.Acquisition.achieved / summary.Acquisition.target) * 100
-          : 0;
+        summary.Acquisition.target += t.totalTarget;
+        summary.Acquisition.achieved += t.totalAch;
       }
-    }
+    });
 
-    // Totals
+    // Percentages
+    summary.Renewal.percent = summary.Renewal.target
+      ? (summary.Renewal.achieved / summary.Renewal.target) * 100
+      : 0;
+
+    summary.Acquisition.percent = summary.Acquisition.target
+      ? (summary.Acquisition.achieved / summary.Acquisition.target) * 100
+      : 0;
+
     summary.Total.target = summary.Renewal.target + summary.Acquisition.target;
     summary.Total.achieved = summary.Renewal.achieved + summary.Acquisition.achieved;
     summary.Total.percent = summary.Total.target
       ? (summary.Total.achieved / summary.Total.target) * 100
       : 0;
 
-    // Extra fields (3-month logic)
+    // Extra 3-month logic
     const balance = summary.Total.target - summary.Total.achieved;
     const currentAvg = summary.Total.achieved / 3;
     const requiredRate = balance / 3;
