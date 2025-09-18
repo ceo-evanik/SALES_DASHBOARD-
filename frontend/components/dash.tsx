@@ -247,7 +247,7 @@ export default function DashboardPage() {
                     <th className="p-1 min-w-[50px]">%</th>
                     <th className="p-1 min-w-[10px]">TOTAL TARGET</th>
                     <th className="p-1 min-w-[100px]">TOTAL ACHIEVED</th>
-                    <th className="min-w-[60px]">%ACHIEVED</th>
+                    <th className="min-w-[60px]">%ACHIEVEMENT</th>
                     <th className="p-1 min-w-[80px]">BALANCE</th>
                     <th className="p-1 min-w-[80px]">CURRENT AVG</th>
                     <th className="p-1 min-w-[100px]">REQUIRED RATE</th>

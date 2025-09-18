@@ -1,11 +1,14 @@
-import Profile from "@/components/user-profile"
 
-function page() {
+import Profile from "@/components/user-profile";
+
+function Page() {
   return (
-    <div>
-        <Profile/>
-    </div>
-  )
+    
+      <div>
+        <Profile />
+      </div>
+   
+  );
 }
 
-export default page
+export default Page;
