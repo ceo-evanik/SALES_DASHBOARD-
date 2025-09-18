@@ -17,7 +17,7 @@ import {
 const router = express.Router();
 
 // -------------------- CREATE USER --------------------
-// Admin creates users (sales/support/admin)
+// Admin creates users
 router.post(
   "/",
   protect,
