@@ -78,24 +78,70 @@ export const updateTarget = async (req, res, next) => {
 
 export const getTargets = async (req, res, next) => {
   try {
-    const targets = await EvkTarget.find().populate(
-      "userId",
-      "name email userType supervisorId supervisorName department contactNo"
-    );
+    const targets = await EvkTarget.find()
+      .populate(
+        "userId",
+        "name email userType supervisorId supervisorName department contactNo"
+      );
 
-    // Convert userId → user in the response
-    const formattedTargets = targets.map(t => {
-      const obj = t.toObject();
-      obj.user = obj.userId;  // rename field
-      delete obj.userId;      // remove old field
-      return obj;
+    // Fetch all invoices once
+    const { data } = await axios.get(
+      "http://localhost:4003/api/zoho/invoices",
+      {
+        headers: { Authorization: `Zoho-oauthtoken ${process.env.ZOHO_TOKEN}` },
+      }
+    );
+    const invoices = Array.isArray(data) ? data : data.data || [];
+
+    // Enrich targets
+    const enriched = targets.map((t) => {
+      const tObj = t.toObject();
+
+      // Rename userId → user
+      tObj.user = tObj.userId;
+      delete tObj.userId;
+
+      if (!t.zohoSalespersonId || !t.date) return tObj;
+
+      const startOfMonth = new Date(t.date);
+      startOfMonth.setUTCDate(1);
+      startOfMonth.setUTCHours(0, 0, 0, 0);
+
+      const endOfMonth = new Date(startOfMonth);
+      endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
+
+      // Filter invoices for this salesperson and month
+      const matched = invoices.filter((inv) => {
+        const invDate = new Date(inv.date);
+        return (
+          String(inv.salesperson_id) === String(t.zohoSalespersonId) &&
+          invDate >= startOfMonth &&
+          invDate < endOfMonth
+        );
+      });
+
+      console.log("🎯 Target check", {
+        name: t.name,
+        zohoId: t.zohoSalespersonId,
+        targetMonth: t.date,
+        start: startOfMonth,
+        end: endOfMonth,
+        matchedCount: matched.length,
+        totalAch: matched.reduce((sum, inv) => sum + (inv.total || 0), 0),
+      });
+
+      tObj.matchedCount = matched.length;
+      tObj.totalAch = matched.reduce((sum, inv) => sum + (inv.total || 0), 0);
+
+      return tObj;
     });
 
-    res.json({ success: true, data: formattedTargets });
+    res.json({ success: true, data: enriched });
   } catch (err) {
     next(err);
   }
 };
+
 
 
 // -------------------- Get single target --------------------
