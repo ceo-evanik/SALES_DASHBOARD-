@@ -137,18 +137,60 @@ export const updateTarget = async (req, res, next) => {
 };
 
 
-// -------------------- Get all targets --------------------
 export const getTargets = async (req, res, next) => {
   try {
-    const targets = await EvkTarget.find().populate(
-      "userId",
-      "name email userType supervisorId supervisorName department contactNo"
+    const targets = await EvkTarget.find()
+      .populate(
+        "userId",
+        "name email userType supervisorId supervisorName department contactNo"
+      );
+
+    // Fetch all invoices once
+    const { data } = await axios.get(
+      "http://localhost:4003/api/zoho/invoices",
+      {
+        headers: { Authorization: `Zoho-oauthtoken ${process.env.ZOHO_TOKEN}` },
+      }
     );
-    res.json({ success: true, data: targets });
+    const invoices = Array.isArray(data) ? data : data.data || [];
+
+    // Enrich targets
+    const enriched = targets.map((t) => {
+      if (!t.zohoSalespersonId || !t.date) return t.toObject();
+
+      const startOfMonth = new Date(t.date);
+      startOfMonth.setUTCDate(1);
+      startOfMonth.setUTCHours(0, 0, 0, 0);
+
+      const endOfMonth = new Date(startOfMonth);
+      endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
+
+      // Filter invoices for this salesperson and month
+      const matched = invoices.filter((inv) => {
+        const invDate = new Date(inv.date);
+        return (
+          String(inv.salesperson_id) === String(t.zohoSalespersonId) &&
+          invDate >= startOfMonth &&
+          invDate < endOfMonth
+        );
+      });
+
+      return {
+        ...t.toObject(),
+        matchedCount: matched.length,
+        totalAch: matched.reduce((sum, inv) => sum + (inv.total || 0), 0),
+      };
+    });
+
+    res.json({ success: true, data: enriched });
   } catch (err) {
     next(err);
   }
 };
+
+
+
+
 
 // -------------------- Get single target --------------------
 export const getTarget = async (req, res, next) => {
