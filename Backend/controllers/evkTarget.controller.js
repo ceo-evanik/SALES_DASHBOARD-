@@ -11,16 +11,27 @@ export const createTarget = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errs.array() });
     }
 
-    const existing = await EvkTarget.findOne({ evkId: req.body.evkId });
+    // normalize date to first of month (so uniqueness works per month)
+    const date = new Date(req.body.date);
+    const normalizedDate = new Date(date.getFullYear(), date.getMonth(), 1);
+
+    // Check if a target already exists for this user + month + revenueStream
+    const existing = await EvkTarget.findOne({
+      userId: req.body.userId,
+      revenueStream: req.body.revenueStream,
+      date: normalizedDate,
+    });
+
     if (existing) {
       return res.status(400).json({
         success: false,
-        message: "Target with this evkId already exists",
+        message: "Target for this user, month, and revenue stream already exists",
       });
     }
 
     const target = new EvkTarget({
       ...req.body,
+      date: normalizedDate,
       importMeta: {
         source: "manual-create",
         importedAt: new Date(),
@@ -35,6 +46,7 @@ export const createTarget = async (req, res, next) => {
     next(err);
   }
 };
+
 
 // -------------------- Update target (Admin only) --------------------
 export const updateTarget = async (req, res, next) => {
