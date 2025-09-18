@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const evkTargetSchema = new mongoose.Schema(
   {
-    evkId: { type: Number, required: true, unique: true },
 
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     name: { type: String, required: true }, // salesperson name
