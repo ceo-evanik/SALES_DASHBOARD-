@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton"; // ✅ Skeleton import
 
-
-// Last 3 months in YYYY-MM
+// Last 3 months in YYYY-MM format
 const getLastThreeMonths = (): string[] => {
   const today = new Date();
   const months: string[] = [];
@@ -15,14 +15,14 @@ const getLastThreeMonths = (): string[] => {
   return months;
 };
 
-// YYYY-MM to short month name
+// Convert YYYY-MM to short month name
 const getMonthName = (monthString: string): string => {
   const [year, month] = monthString.split("-");
   const date = new Date(Number(year), Number(month) - 1);
   return date.toLocaleString("default", { month: "short" });
 };
 
-// Indian number formatting
+// Indian number formatting (1,23,456)
 const formatIndianNumber = (num: number | null | undefined): string =>
   num === null || num === undefined ? "-" : num.toLocaleString("en-IN");
 
@@ -31,7 +31,9 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
 
+  // Fetch data from backend
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -42,12 +44,9 @@ export default function BillingPage() {
             Authorization: `Bearer ${token}`,
           },
         });
-
         if (!res.ok) throw new Error("Failed to fetch data");
-
         const json = await res.json();
         setData(Array.isArray(json.data) ? json.data : []);
-        console.log(json.data)
       } catch (err) {
         console.error("Error fetching data:", err);
         setData([]);
@@ -60,7 +59,7 @@ export default function BillingPage() {
 
   const months = getLastThreeMonths();
 
-  // Transform data
+  // Transform raw data into formatted data for table
   const formattedData: FormattedData[] = [];
   const groupedBySalesperson: Record<string, SalesData[]> = {};
 
@@ -84,17 +83,42 @@ export default function BillingPage() {
       achPercent[month] = t && a ? `${Math.round((a / t) * 100)}%` : "-";
     });
 
-    formattedData.push({ name, targets, achieved, achPercent });
+    formattedData.push({
+      name,
+      targets,
+      achieved,
+      achPercent,
+      department: records[0]?.user?.department || "Unknown",
+    });
   }
 
-  // Apply filters
-  const filteredData = formattedData.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Apply search and department filters
+  const filteredData = formattedData.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
+    const matchesDepartment =
+      departmentFilter === "all"
+        ? true
+        : item.department?.toLowerCase() === departmentFilter.toLowerCase();
+    return matchesSearch && matchesDepartment;
+  });
 
   const displayMonths = selectedMonth === "all" ? months : [selectedMonth];
 
-  if (loading) return <div className="p-8 text-gray-900 dark:text-gray-100">Loading...</div>;
+  // ✅ Skeleton Loader while loading
+  if (loading)
+    return (
+      <div className="p-8 space-y-4">
+        <Skeleton className="h-8 w-1/3" />
+        <div className="flex gap-3">
+          <Skeleton className="h-10 w-1/4" />
+          <Skeleton className="h-10 w-1/4" />
+          <Skeleton className="h-10 w-1/4" />
+        </div>
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-6 w-3/4" />
+      </div>
+    );
 
   return (
     <div className="dark:bg-gray-900 py-8 text-gray-900 dark:text-gray-100">
@@ -118,8 +142,19 @@ export default function BillingPage() {
           >
             <option value="all">All Months</option>
             {months.map((m) => (
-              <option key={m} value={m}>{getMonthName(m)}</option>
+              <option key={m} value={m}>
+                {getMonthName(m)}
+              </option>
             ))}
+          </select>
+          <select
+            value={departmentFilter}
+            onChange={(e) => setDepartmentFilter(e.target.value)}
+            className="px-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-gray-100"
+          >
+            <option value="all">All Departments</option>
+            <option value="sales">Sales</option>
+            <option value="support">Support</option>
           </select>
         </div>
       </div>
@@ -129,21 +164,52 @@ export default function BillingPage() {
         <table className="w-full text-sm text-left border-collapse">
           <thead>
             <tr className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white">
-              <th rowSpan={2} className="px-4 py-3 border border-gray-200 text-sm font-semibold text-left rounded-tl-lg">REVENUE OWNER</th>
-              <th colSpan={displayMonths.length} className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold">Revenue Target</th>
-              <th rowSpan={2} className="px-4 py-3 border border-gray-200 text-sm font-semibold">Total Target</th>
-              <th colSpan={displayMonths.length} className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold">Achievement</th>
-              <th colSpan={displayMonths.length} className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold rounded-tr-lg">Achievement %</th>
+              <th
+                rowSpan={2}
+                className="px-4 py-3 border border-gray-200 text-sm font-semibold text-left rounded-tl-lg"
+              >
+                REVENUE OWNER
+              </th>
+              <th
+                colSpan={displayMonths.length}
+                className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold"
+              >
+                Revenue Target
+              </th>
+              <th
+                rowSpan={2}
+                className="px-4 py-3 border border-gray-200 text-sm font-semibold"
+              >
+                Total Target
+              </th>
+              <th
+                colSpan={displayMonths.length}
+                className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold"
+              >
+                Achievement
+              </th>
+              <th
+                colSpan={displayMonths.length}
+                className="px-4 py-3 text-center border border-gray-200 text-sm font-semibold rounded-tr-lg"
+              >
+                Achievement %
+              </th>
             </tr>
             <tr className="bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white">
               {displayMonths.map((m) => (
-                <th key={`target-${m}`} className="px-4 py-2 border border-gray-200 text-xs font-medium">{getMonthName(m)}</th>
+                <th key={`target-${m}`} className="px-4 py-2 border border-gray-200 text-xs font-medium">
+                  {getMonthName(m)}
+                </th>
               ))}
               {displayMonths.map((m) => (
-                <th key={`ach-${m}`} className="px-4 py-2 border border-gray-200 text-xs font-medium">{getMonthName(m)}</th>
+                <th key={`ach-${m}`} className="px-4 py-2 border border-gray-200 text-xs font-medium">
+                  {getMonthName(m)}
+                </th>
               ))}
               {displayMonths.map((m) => (
-                <th key={`percent-${m}`} className="px-4 py-2 border border-gray-200 text-xs font-medium">{getMonthName(m)}</th>
+                <th key={`percent-${m}`} className="px-4 py-2 border border-gray-200 text-xs font-medium">
+                  {getMonthName(m)}
+                </th>
               ))}
             </tr>
           </thead>
@@ -151,26 +217,46 @@ export default function BillingPage() {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredData.length > 0 ? (
               filteredData.map((item, idx) => {
-                const totalTarget = displayMonths.reduce((sum, m) => sum + (item.targets[m] ?? 0), 0);
+                const totalTarget = displayMonths.reduce(
+                  (sum, m) => sum + (item.targets[m] ?? 0),
+                  0
+                );
                 return (
-                  <tr key={item.name} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${idx % 2 === 0 ? "bg-gray-50 dark:bg-gray-800" : ""}`}>
-                    <td className="px-4 py-2 border border-gray-300 font-medium text-blue-700 dark:text-blue-400">{item.name}</td>
+                  <tr
+                    key={item.name}
+                    className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                      idx % 2 === 0 ? "bg-gray-50 dark:bg-gray-800" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-2 border border-gray-300 font-medium text-blue-700 dark:text-blue-400">
+                      {item.name}
+                    </td>
                     {displayMonths.map((m) => (
-                      <td key={`t-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300">{formatIndianNumber(item.targets[m])}</td>
+                      <td key={`t-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300">
+                        {formatIndianNumber(item.targets[m])}
+                      </td>
                     ))}
-                    <td className="px-4 py-2 border border-gray-300 font-semibold text-green-700 dark:text-green-400">{formatIndianNumber(totalTarget)}</td>
+                    <td className="px-4 py-2 border border-gray-300 font-semibold text-green-700 dark:text-green-400">
+                      {formatIndianNumber(totalTarget)}
+                    </td>
                     {displayMonths.map((m) => (
-                      <td key={`a-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300">{formatIndianNumber(item.achieved[m])}</td>
+                      <td key={`a-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300">
+                        {formatIndianNumber(item.achieved[m])}
+                      </td>
                     ))}
                     {displayMonths.map((m) => (
-                      <td key={`p-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300">{item.achPercent[m]}</td>
+                      <td key={`p-${item.name}-${m}`} className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300">
+                        {item.achPercent[m]}
+                      </td>
                     ))}
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={1 + 4 * displayMonths.length + 1} className="px-4 py-2 text-center border border-gray-300 text-gray-500">No data available</td>
+                <td colSpan={1 + 4 * displayMonths.length + 1} className="px-4 py-2 text-center border border-gray-300 text-gray-500">
+                  No data available
+                </td>
               </tr>
             )}
           </tbody>
