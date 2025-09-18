@@ -18,18 +18,46 @@ export const adminCreateUser = async (req, res, next) => {
       supervisorName,
     } = req.body;
 
+    // --- Validate contact number ---
+    if (!/^\d{10}$/.test(contactNo)) {
+      return res.status(400).json({
+        success: false,
+        field: "contactNo",
+        message: "Contact number must be exactly 10 digits",
+      });
+    }
+
     // --- Check uniqueness ---
     if (userType === "sales") {
       const existing = await User.findOne({ salespersonId });
-      if (existing) return res.status(400).json({ message: "SalespersonId already exists" });
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          field: "salespersonId",
+          message: "SalespersonId already exists",
+        });
+      }
     } else {
       const existing = await User.findOne({ email });
-      if (existing) return res.status(400).json({ message: "Email already exists" });
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          field: "email",
+          message: "Email already exists",
+        });
+      }
     }
 
     // Ensure required fields for sales users
-    if (userType === "sales" && (!salespersonId || !department || !supervisorId || !supervisorName)) {
-      return res.status(400).json({ message: "Missing salesperson details" });
+    if (
+      userType === "sales" &&
+      (!salespersonId || !department || !supervisorId || !supervisorName)
+    ) {
+      return res.status(400).json({
+        success: false,
+        field: "salesDetails",
+        message: "Missing salesperson details",
+      });
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -50,11 +78,12 @@ export const adminCreateUser = async (req, res, next) => {
     const userObj = user.toObject();
     delete userObj.password;
 
-    res.status(201).json({ message: "User created", data: userObj });
+    res.status(201).json({ success: true, message: "User created", data: userObj });
   } catch (err) {
     next(err);
   }
 };
+
 
 // -------------------- Get all users (exclude admin) --------------------
 export const getAllUsers = async (req, res, next) => {
