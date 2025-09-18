@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const evkTargetSchema = new mongoose.Schema(
   {
-    evkId: { type: Number, unique: true }, // ❌ removed required:true
+    evkId: { type: Number, unique: true }, // auto-increment, no longer required
 
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     name: { type: String, required: true },
@@ -28,15 +28,16 @@ const evkTargetSchema = new mongoose.Schema(
 evkTargetSchema.pre("save", async function (next) {
   if (!this.isNew) return next();
 
+  // auto-increment evkId
   if (!this.evkId) {
     const last = await mongoose.model("EvkTarget").findOne().sort({ evkId: -1 }).select("evkId");
     this.evkId = last ? last.evkId + 1 : 2000;
   }
 
-  // normalize date to first of month
+  // normalize date to first of month in UTC
   if (this.date) {
     const d = new Date(this.date);
-    this.date = new Date(d.getFullYear(), d.getMonth(), 1);
+    this.date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), 1));
   }
 
   next();

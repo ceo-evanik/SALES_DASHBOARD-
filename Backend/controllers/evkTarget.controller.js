@@ -3,7 +3,7 @@ import { logger } from "../config/logger.js";
 import { validationResult } from "express-validator";
 import axios from "axios";
 
-// -------------------- Create target (Admin only) --------------------
+
 export const createTarget = async (req, res, next) => {
   try {
     const errs = validationResult(req);
@@ -11,11 +11,11 @@ export const createTarget = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errs.array() });
     }
 
-    // normalize date to first of month (so uniqueness works per month)
-    const date = new Date(req.body.date);
-    const normalizedDate = new Date(date.getFullYear(), date.getMonth(), 1);
+    // normalize date to first day of month in UTC
+    const d = new Date(req.body.date);
+    const normalizedDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), 1));
 
-    // Check if a target already exists for this user + month + revenueStream
+    // Check uniqueness: user + month + revenueStream
     const existing = await EvkTarget.findOne({
       userId: req.body.userId,
       revenueStream: req.body.revenueStream,
@@ -40,12 +40,21 @@ export const createTarget = async (req, res, next) => {
     });
 
     await target.save();
+
+    // format response: always YYYY-MM-DD for frontend
+    const targetObj = target.toObject();
+    targetObj.date = `${normalizedDate.getUTCFullYear()}-${String(
+      normalizedDate.getUTCMonth() + 1
+    ).padStart(2, "0")}-01`;
+
     logger.info(`Target created | evkId=${target.evkId} by ${req.user?.username}`);
-    res.status(201).json({ success: true, data: target });
+    res.status(201).json({ success: true, data: targetObj });
   } catch (err) {
     next(err);
   }
 };
+
+
 
 
 // -------------------- Update target (Admin only) --------------------
