@@ -17,6 +17,8 @@ import invoiceRoutes from "./routes/invoiceRoutes.js";
 import evkTargetRoutes from "./routes/evkTargetRoutes.js";
 import zohoRoutes from "./routes/zohoRoutes.js"; // ✅ NEW
 import userRoutes from "./routes/userRoutes.js"; // ✅ NEW
+import textRoutes from "./routes/textRoutes.js"; // ✅ NEW
+
 
 const PORT = env.PORT || 4003; // ✅ use validated env
 
@@ -89,6 +91,7 @@ if (cluster.isPrimary) {
   app.use("/api/users", userRoutes);
   app.use("/api/invoices", invoiceRoutes);
   app.use("/api/zoho", zohoRoutes);
+  app.use("/api/texts", textRoutes);
 
   // Error handler
   app.use(errorHandler);
