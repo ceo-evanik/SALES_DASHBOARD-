@@ -21,7 +21,7 @@ export default function RegisterSalespersonPage() {
         email: '',
         password: '',
         contactNo: '',
-        userType: 'sales',
+        userType: 'user',
         salespersonId: '',
         department: '',
         supervisorId: '',
@@ -45,7 +45,7 @@ export default function RegisterSalespersonPage() {
         else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
 
         if (!formData.contactNo.trim()) newErrors.contactNo = 'Contact number is required';
-        else if (formData.contactNo.length < 10) newErrors.contactNo = 'Contact number must be at least 10 digits';
+        else if (!/^[0-9]{10}$/.test(formData.contactNo)) newErrors.contactNo = 'Contact number must be at least 10 digits';
 
         if (!formData.salespersonId.trim()) newErrors.salespersonId = 'Salesperson ID is required';
         if (!formData.department.trim()) newErrors.department = 'Department is required';
@@ -97,7 +97,7 @@ export default function RegisterSalespersonPage() {
                     email: '',
                     password: '',
                     contactNo: '',
-                    userType: 'sales',
+                    userType: 'user',
                     salespersonId: '',
                     department: '',
                     supervisorId: '',

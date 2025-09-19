@@ -60,7 +60,7 @@ export default function TargetFormPage() {
             };
 
             const res = await fetch(
-                isUpdate ? `/api/target/${userId}` : "/api/target",
+                isUpdate ? `/api/target` : "/api/target",
                 {
                     method: isUpdate ? "PUT" : "POST",
                     headers: {
