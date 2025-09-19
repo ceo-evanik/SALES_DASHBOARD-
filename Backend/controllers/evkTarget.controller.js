@@ -173,15 +173,6 @@ export const getTargets = async (req, res, next) => {
         );
       });
 
-      console.log("🎯 Target check", {
-        name: t.name,
-        zohoId: t.zohoSalespersonId,
-        targetMonth: t.date,
-        start: startOfMonth,
-        end: endOfMonth,
-        matchedCount: matched.length,
-        totalAch: matched.reduce((sum, inv) => sum + (inv.total || 0), 0),
-      });
 
       tObj.matchedCount = matched.length;
       tObj.totalAch = matched.reduce((sum, inv) => sum + (inv.total || 0), 0);
