@@ -117,7 +117,7 @@ export default function SignInPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing In..." : "Sign In"}
             </Button>
-
+{/* 
             <p className="text-sm text-center mt-2">
               Don&apos;t have an account?{" "}
               <span
@@ -126,7 +126,7 @@ export default function SignInPage() {
               >
                 Register
               </span>
-            </p>
+            </p> */}
           </form>
         </CardContent>
       </Card>

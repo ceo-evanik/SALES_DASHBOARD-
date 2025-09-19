@@ -36,7 +36,9 @@ export default function DashboardPage() {
     })
       .then((res) => res.json())
       .then((data) => {
+        
         if (data.success) setSummary(data.data);
+       // console.log("📊 Summary Data:", data.data);
       })
       .catch((err) => console.error("Error fetching summary:", err))
       .finally(() => setLoading(false)); // ✅ stop loader
@@ -255,7 +257,7 @@ export default function DashboardPage() {
               <th className="p-2 min-w-[50px]">%</th>
               <th className="p-2 min-w-[100px]">TOTAL TARGET</th>
               <th className="p-2 min-w-[100px]">TOTAL ACHIEVED</th>
-              <th className="p-2 min-w-[60px]">%ACHIEVEMENT</th>
+              <th className=" min-w-[60px]">%ACHIEVEMENT</th>
               <th className="p-2 min-w-[80px]">BALANCE</th>
               <th className="p-2 min-w-[80px]">CURRENT AVG</th>
               <th className="p-2 min-w-[100px]">REQUIRED RATE</th>
