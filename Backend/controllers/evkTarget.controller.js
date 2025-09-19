@@ -58,7 +58,6 @@ export const createTarget = async (req, res, next) => {
 import mongoose from "mongoose";
 
 
-
 // -------------------- Update target (Admin only) --------------------
 export const updateTarget = async (req, res, next) => {
   try {
@@ -74,19 +73,30 @@ export const updateTarget = async (req, res, next) => {
       });
     }
 
-    const { month, revenueStream, totalTarget, totalAch, imageUrl } = req.body;
+    const { date, revenueStream, totalTarget, totalAch, imageUrl } = req.body;
     const userId = req.params.id; // ✅ FIXED
 
-    if (!month) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Month is required (YYYY-MM format)" });
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date is required (YYYY-MM-DD format)",
+      });
     }
 
-    // normalize month to start and end of month in UTC
-    const [year, mon] = month.split("-").map(Number);
-    const monthStart = new Date(Date.UTC(year, mon - 1, 1));
-    const monthEnd = new Date(Date.UTC(year, mon, 0, 23, 59, 59, 999));
+    // parse incoming date -> get month range
+    const inputDate = new Date(date);
+    if (isNaN(inputDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format, expected YYYY-MM-DD",
+      });
+    }
+
+    const year = inputDate.getUTCFullYear();
+    const mon = inputDate.getUTCMonth(); // 0-based
+
+    const monthStart = new Date(Date.UTC(year, mon, 1));
+    const monthEnd = new Date(Date.UTC(year, mon + 1, 0, 23, 59, 59, 999));
 
     // find the target for this user + month + revenueStream
     const target = await EvkTarget.findOne({
@@ -98,7 +108,7 @@ export const updateTarget = async (req, res, next) => {
     if (!target) {
       return res.status(404).json({
         success: false,
-        message: `Target not found for ${month} (userId=${userId})`,
+        message: `Target not found for ${date} (userId=${userId})`,
       });
     }
 
@@ -115,7 +125,7 @@ export const updateTarget = async (req, res, next) => {
     await target.save();
 
     logger.info(
-      `Target updated | userId=${userId} month=${month} by ${req.user?.username}`
+      `Target updated | userId=${userId} date=${date} by ${req.user?.username}`
     );
     res.json({ success: true, data: target });
   } catch (err) {
