@@ -117,16 +117,7 @@ export default function SignInPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing In..." : "Sign In"}
             </Button>
-{/* 
-            <p className="text-sm text-center mt-2">
-              Don&apos;t have an account?{" "}
-              <span
-                className="text-blue-600 cursor-pointer hover:underline"
-                onClick={() => router.push("/register")}
-              >
-                Register
-              </span>
-            </p> */}
+
           </form>
         </CardContent>
       </Card>

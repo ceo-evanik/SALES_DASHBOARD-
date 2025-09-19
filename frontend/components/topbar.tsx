@@ -1,6 +1,7 @@
+
+
 'use client';
 
-import { useState } from 'react';
 import {
     Bell,
     Settings,
@@ -36,7 +37,7 @@ export function Topbar({ isSideBarOpen, setIsSideBarOpen }: TopbarProps) {
 
     // 🔹 Fix: conditional fallback for first render
     const firstName = !loading && user ? user.name.split(' ')[0] : '';
-    const avatarLetter = firstName ? firstName.charAt(0).toUpperCase() : '';
+    const avatarLetter = firstName ? firstName.charAt(0).toUpperCase() : 'U';
 
     return (
         <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] px-4">
@@ -93,7 +94,7 @@ export function Topbar({ isSideBarOpen, setIsSideBarOpen }: TopbarProps) {
                         <button className="flex items-center gap-2 rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-800">
                             <Avatar className="h-8 w-8">
                                 {loading || !user ? (
-                                    <AvatarFallback>U</AvatarFallback>
+                                    <AvatarFallback>{avatarLetter}</AvatarFallback>
                                 ) : (
                                     <AvatarImage
                                         src={`https://ui-avatars.com/api/?name=${firstName}`}

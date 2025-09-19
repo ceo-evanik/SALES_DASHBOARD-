@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -111,26 +110,24 @@ export default function UserPage() {
   );
 
   return (
-    <div className="p-4 max-w-[90vw] lg:max-w-[80vw] mx-auto">
-      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
-        <UserCircle className="h-6 w-6 text-indigo-600" />
+    <div className="p-6 w-full lg:w-[95%] mx-auto">
+      <h1 className="text-3xl font-bold mb-6 flex items-center gap-2 text-indigo-700">
+        <UserCircle className="h-8 w-8 text-indigo-600" />
         Users Management
       </h1>
 
       {/* ✅ Filters */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Search by name */}
         <Input
           placeholder="🔍 Search by name..."
           value={searchName}
           onChange={(e) => {
             setSearchName(e.target.value);
-            setCurrentPage(1); // reset page
+            setCurrentPage(1);
           }}
           className="shadow-sm"
         />
 
-        {/* Department filter */}
         <Select
           value={departmentFilter}
           onValueChange={(value) => {
@@ -148,7 +145,6 @@ export default function UserPage() {
           </SelectContent>
         </Select>
 
-        {/* User type filter */}
         <Select
           value={userTypeFilter}
           onValueChange={(value) => {
@@ -175,9 +171,9 @@ export default function UserPage() {
         </div>
       ) : (
         <>
-          <div className="border rounded shadow-md overflow-hidden">
-            <Table className="max-w-full">
-              <TableHeader className="bg-gray-50">
+          <div className="border rounded shadow-lg overflow-hidden">
+            <Table className="w-full text-sm">
+              <TableHeader className="bg-indigo-50">
                 <TableRow>
                   <TableHead>Salesperson ID</TableHead>
                   <TableHead>Name</TableHead>
@@ -193,10 +189,17 @@ export default function UserPage() {
               <TableBody>
                 {paginatedUsers.length > 0 ? (
                   paginatedUsers.map((user) => (
-                    <TableRow key={user._id} className="hover:bg-gray-50">
+                    <TableRow
+                      key={user._id}
+                      className="hover:bg-indigo-50/40 transition"
+                    >
                       <TableCell>{user.salespersonId}</TableCell>
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell className="font-medium">
+                        {user.name}
+                      </TableCell>
+                      <TableCell className="break-words">
+                        {user.email}
+                      </TableCell>
                       <TableCell>{user.contactNo}</TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="capitalize">
@@ -207,7 +210,10 @@ export default function UserPage() {
                       <TableCell>{user.supervisorName}</TableCell>
                       <TableCell>
                         {user.targets && user.targets.length > 0 ? (
-                          <Badge variant="outline" className="flex items-center gap-1">
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
                             <Target className="h-3 w-3 text-green-600" />
                             {user.targets.length} Active
                           </Badge>
@@ -217,8 +223,29 @@ export default function UserPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-2 justify-center">
-                          {/* ✅ Condition for Target */}
-                          {user.targets && user.targets.length > 0 ? (
+                          {/* ✅ Always show Add Target */}
+                          <Link
+                            href={{
+                              pathname: "/dashboard/users/add-target",
+                              query: {
+                                mode: "create",
+                                userId: user._id,
+                                name: user.name,
+                                salespersonId: user.salespersonId,
+                              },
+                            }}
+                          >
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <PlusCircle className="mr-1 h-4 w-4" />
+                              Add Target
+                            </Button>
+                          </Link>
+
+                          {/* ✅ Show Update Target only if targets exist */}
+                          {user.targets && user.targets.length > 0 && (
                             <Link
                               href={{
                                 pathname: "/dashboard/users/add-target",
@@ -235,26 +262,9 @@ export default function UserPage() {
                                 Update Target
                               </Button>
                             </Link>
-                          ) : (
-                            <Link
-                              href={{
-                                pathname: "/dashboard/users/add-target",
-                                query: {
-                                  mode: "create",
-                                  userId: user._id,
-                                  name: user.name,
-                                  salespersonId: user.salespersonId,
-                                },
-                              }}
-                            >
-                              <Button size="sm" variant="default">
-                                <PlusCircle className="mr-1 h-4 w-4" />
-                                Add Target
-                              </Button>
-                            </Link>
                           )}
 
-                          {/* ✅ Always allow editing user */}
+                          {/* ✅ Always show Edit User */}
                           <Link
                             href={{
                               pathname: "/dashboard/users/update-user",
@@ -290,7 +300,7 @@ export default function UserPage() {
             </Table>
           </div>
 
-          {/* ✅ Pagination below table */}
+          {/* ✅ Pagination */}
           <div className="mt-6">
             <Pagination
               currentPage={currentPage}
