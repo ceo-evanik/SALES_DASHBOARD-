@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import {
     Table,
@@ -53,15 +52,15 @@ export default function UserPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // ✅ Filters state
+// ✅ Filters state
     const [searchName, setSearchName] = useState("");
     const [departmentFilter, setDepartmentFilter] = useState("all");
 
-    // ✅ Pagination state
+// ✅ Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
-    useEffect(() => {
+useEffect(() => {
         async function fetchUsers() {
             try {
                 const token = localStorage.getItem("token");
