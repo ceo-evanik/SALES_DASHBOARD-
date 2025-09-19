@@ -1,5 +1,6 @@
-// routes/text.routes.js
+// backend/routes/text.routes.js
 import express from "express";
+import { protect, authorize } from "../middlewares/auth.Middleware.js";
 import {
   createText,
   getAllTexts,
@@ -7,23 +8,16 @@ import {
   updateText,
   deleteText,
 } from "../controllers/text.controller.js";
-import { protect, authorize } from "../middlewares/auth.Middleware.js";
 
 const router = express.Router();
 
-// 🔹 Create text (Admin only)
-router.post("/", protect, authorize("admin"), createText);
-
-// 🔹 Get all texts (public or logged-in)
+// -------------------- Public Routes --------------------
 router.get("/", getAllTexts);
-
-// 🔹 Get single text (public or logged-in)
 router.get("/:id", getTextById);
 
-// 🔹 Update text (Admin only)
-router.put("/:id", protect, authorize("admin"), updateText);
-
-// 🔹 Delete text (Admin only)
-router.delete("/:id", protect, authorize("admin"), deleteText);
+// -------------------- Admin/Superadmin Only --------------------
+router.post("/", protect, authorize("admin", "superadmin"), createText);
+router.put("/:id", protect, authorize("admin", "superadmin"), updateText);
+router.delete("/:id", protect, authorize("admin", "superadmin"), deleteText);
 
 export default router;

@@ -1,3 +1,4 @@
+// server.js
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -15,88 +16,78 @@ import { logger } from "./config/logger.js";
 import authRoutes from "./routes/authRoutes.js";
 import invoiceRoutes from "./routes/invoiceRoutes.js";
 import evkTargetRoutes from "./routes/evkTargetRoutes.js";
-import zohoRoutes from "./routes/zohoRoutes.js"; // ✅ NEW
-import userRoutes from "./routes/userRoutes.js"; // ✅ NEW
+import zohoRoutes from "./routes/zohoRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import textRoutes from "./routes/textRoutes.js"; // ✅ NEW
 
-
-const PORT = env.PORT || 4003; // ✅ use validated env
+const PORT = env.PORT || 4003;
 
 if (cluster.isPrimary) {
   const numCPUs = os.cpus().length;
   logger.info(`🟢 Master ${process.pid} is running`);
   logger.info(`⚡ Spawning ${numCPUs} workers (1 per CPU)`);
 
-  // Fork workers
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
+  for (let i = 0; i < numCPUs; i++) cluster.fork();
 
-  // Restart worker if it crashes
-  cluster.on("exit", (worker, code, signal) => {
+  cluster.on("exit", (worker) => {
     logger.error(`❌ Worker ${worker.process.pid} died. Restarting...`);
     cluster.fork();
   });
 } else {
-  // Worker processes
   const app = express();
 
-  // Middleware
+  // 🔹 Middleware
   app.use(express.json());
   app.use(cors({ origin: "*", credentials: true }));
   app.use(helmet());
 
-  // ✅ Global Rate Limiter
-  const globalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      success: false,
-      message: "Too many requests from this IP, please try again later.",
-    },
-  });
-  app.use(globalLimiter);
+  // 🔹 Global Rate Limiter
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 100,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: {
+        success: false,
+        message: "Too many requests from this IP, please try again later.",
+      },
+    })
+  );
 
-  // ✅ Stricter limiter for login route
-  const loginLimiter = rateLimit({
-    windowMs: 10 * 60 * 1000, // 10 minutes
-    max: 5,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      success: false,
-      message: "Too many login attempts, please try again later.",
-    },
-  });
-  app.use("/api/auth/login", loginLimiter);
+  // 🔹 Stricter limiter for login route
+  app.use(
+    "/api/auth/login",
+    rateLimit({
+      windowMs: 10 * 60 * 1000,
+      max: 5,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: {
+        success: false,
+        message: "Too many login attempts, please try again later.",
+      },
+    })
+  );
 
   // Health check
-  app.get("/", (req, res) => {
-    res.send("🚀 Server is working");
-  });
+  app.get("/", (req, res) => res.send("🚀 Server is working"));
+  app.get("/health", (req, res) =>
+    res.status(200).json({ status: "ok", uptime: process.uptime(), pid: process.pid })
+  );
 
-  app.get("/health", (req, res) => {
-    res.status(200).json({
-      status: "ok",
-      uptime: process.uptime(),
-      pid: process.pid,
-    });
-  });
-
-  // API Routes
+  // 🔹 API Routes
   app.use("/api/auth", authRoutes);
   app.use("/api/users/targets", evkTargetRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/invoices", invoiceRoutes);
   app.use("/api/zoho", zohoRoutes);
-  app.use("/api/texts", textRoutes);
+  app.use("/api/texts", textRoutes); // ✅ NEW
 
   // Error handler
   app.use(errorHandler);
 
-  // DB connection
+  // DB connect
   connectDB();
 
   const server = app.listen(PORT, () => {
