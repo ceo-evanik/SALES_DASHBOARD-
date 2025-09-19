@@ -55,6 +55,8 @@ export const createTarget = async (req, res, next) => {
 };
 
 
+import mongoose from "mongoose";
+
 
 
 // -------------------- Update target (Admin only) --------------------
@@ -72,29 +74,59 @@ export const updateTarget = async (req, res, next) => {
       });
     }
 
-    // Add audit fields
-    const updateData = {
-      ...req.body,
-      "importMeta.importedAt": new Date(),
-      "importMeta.importedBy": req.user?.username || "system",
-    };
+    const { month, revenueStream, totalTarget, totalAch, imageUrl } = req.body;
+    const userId = req.params.id; // ✅ FIXED
 
-    const target = await EvkTarget.findByIdAndUpdate(
-      req.params.id,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-
-    if (!target) {
-      return res.status(404).json({ success: false, message: "Target not found" });
+    if (!month) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Month is required (YYYY-MM format)" });
     }
 
-    logger.info(`Target updated | id=${req.params.id} by ${req.user?.username}`);
+    // normalize month to start and end of month in UTC
+    const [year, mon] = month.split("-").map(Number);
+    const monthStart = new Date(Date.UTC(year, mon - 1, 1));
+    const monthEnd = new Date(Date.UTC(year, mon, 0, 23, 59, 59, 999));
+
+    // find the target for this user + month + revenueStream
+    const target = await EvkTarget.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+      ...(revenueStream ? { revenueStream } : {}), // revenueStream optional
+      date: { $gte: monthStart, $lte: monthEnd },
+    });
+
+    if (!target) {
+      return res.status(404).json({
+        success: false,
+        message: `Target not found for ${month} (userId=${userId})`,
+      });
+    }
+
+    if (totalTarget !== undefined) target.totalTarget = totalTarget;
+    if (totalAch !== undefined) target.totalAch = totalAch;
+    if (imageUrl !== undefined) target.imageUrl = imageUrl;
+
+    target.importMeta = {
+      ...target.importMeta,
+      importedAt: new Date(),
+      importedBy: req.user?.username || "system",
+    };
+
+    await target.save();
+
+    logger.info(
+      `Target updated | userId=${userId} month=${month} by ${req.user?.username}`
+    );
     res.json({ success: true, data: target });
   } catch (err) {
     next(err);
   }
 };
+
+
+
+
+
 
 
 export const getTargets = async (req, res, next) => {
