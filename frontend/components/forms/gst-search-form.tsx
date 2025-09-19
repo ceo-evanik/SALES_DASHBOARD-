@@ -9,7 +9,7 @@ export default function GstSearchAndDetailForm() {
     const [gstNumber, setGstNumber] = useState("")
     const [customerName, setCustomerName] = useState("")
     const [gstDetails, setGstDetails] = useState<GSTData | null>(null)
-    const [geminiDetails, setGeminiDetails] = useState<any>(null)
+    const [geminiDetails, setGeminiDetails] = useState<GeminiDetails | null>(null)
     const [loading, setLoading] = useState(false)
     const [mode, setMode] = useState<"idle" | "gstSearch" | "manualSearch">("idle")
 

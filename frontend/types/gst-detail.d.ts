@@ -36,3 +36,18 @@ type GSTData = {
     sts: string;
     tradeNam: string;
 }
+
+type GeminiDetails = {
+    CustomerName?: string
+    customerName?: string
+    businessDescription?: string
+    website?: string
+    logo?: string
+    email?: string
+    phone?: string
+    address?: string
+    directors?: string[]
+    linkedin?: string
+    twitter?: string
+    other?: string
+}

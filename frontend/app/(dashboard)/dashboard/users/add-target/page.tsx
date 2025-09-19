@@ -84,6 +84,7 @@ export default function TargetFormPage() {
             }
         } catch (error) {
             setMessage("❌ Error saving target");
+            console.log("❌ Error saving target", error)
         } finally {
             setLoading(false);
         }

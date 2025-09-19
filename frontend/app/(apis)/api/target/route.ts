@@ -46,7 +46,6 @@ export async function PUT(req: Request) {
                 { status: 400 }
             );
         }
-        console.log("body", body);
         const res = await fetch(
             `http://localhost:4003/api/users/targets/${body.userId}`,
             {

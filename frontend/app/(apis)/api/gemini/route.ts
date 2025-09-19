@@ -4,18 +4,18 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(req: Request) {
-    const { gstNumber, customerName } = await req.json()
+  const { gstNumber, customerName } = await req.json()
 
-    if (!gstNumber || !customerName) {
-        return NextResponse.json(
-            { error: "gstNumber and customerName are required" },
-            { status: 400 }
-        )
-    }
+  if (!gstNumber || !customerName) {
+    return NextResponse.json(
+      { error: "gstNumber and customerName are required" },
+      { status: 400 }
+    )
+  }
 
-    try {
-        // Enhanced prompt to leverage Gemini's knowledge
-        const prompt = `
+  try {
+    // Enhanced prompt to leverage Gemini's knowledge
+    const prompt = `
 You are a business intelligence assistant. Given the company name "${customerName}" and GST number "${gstNumber}", provide a comprehensive company profile. Use your knowledge to infer details where possible.
 
 Important instructions:
@@ -59,30 +59,30 @@ Base your inferences on:
 - Typical digital presence patterns
 `
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-        const result = await model.generateContent(prompt)
-        let text = result.response.text().trim()
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    const result = await model.generateContent(prompt)
+    let text = result.response.text().trim()
 
-        // Clean the response
-        text = text.replace(/```json|```/g, "").trim()
+    // Clean the response
+    text = text.replace(/```json|```/g, "").trim()
 
-        let parsed
-        try {
-            parsed = JSON.parse(text)
-        } catch (err) {
-            console.error("JSON parse error:", err, "Raw text:", text)
-            return NextResponse.json(
-                { error: "Could not parse Gemini response", raw: text },
-                { status: 500 }
-            )
-        }
-
-        return NextResponse.json(parsed)
-    } catch (error: any) {
-        console.error("Gemini fetch error:", error)
-        return NextResponse.json(
-            { error: "Failed to fetch details", details: error.message },
-            { status: 500 }
-        )
+    let parsed
+    try {
+      parsed = JSON.parse(text)
+    } catch (err) {
+      console.error("JSON parse error:", err, "Raw text:", text)
+      return NextResponse.json(
+        { error: "Could not parse Gemini response", raw: text },
+        { status: 500 }
+      )
     }
+
+    return NextResponse.json(parsed)
+  } catch (error) {
+    console.error("Gemini fetch error:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch details", details: error },
+      { status: 500 }
+    )
+  }
 }

@@ -108,6 +108,7 @@ export default function RegisterSalespersonPage() {
             }
         } catch (error) {
             setSubmitStatus({ success: false, message: 'An error occurred. Please try again.' });
+            console.log('An error occurred. Please try again.', error)
         } finally {
             setIsSubmitting(false);
         }
@@ -290,7 +291,7 @@ export default function RegisterSalespersonPage() {
                                     </SelectContent>
                                 </Select>
                                 <p className="text-sm text-muted-foreground">
-                                    Select "Sales" for salesperson registration
+                                    {`Select "Sales" for salesperson registration`}
                                 </p>
                             </div>
 
